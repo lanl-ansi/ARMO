@@ -4745,6 +4745,241 @@ indices preprocess_QP(const vector<vector<double>>& point_cloud_data, const vect
     DebugOn("Voronoi preprocessing time = " << prep_time << endl);
     return valid_cells;
 }
+#define INTER_MAX_ITER 1000000
+unsigned long planeStatPerPair;
+unsigned long nbFails;
+static SphericalPolygon tupTemp_;
+struct ThreeUniquePoints {
+  vector<Vec3f> pts_;
+  int pos_ = 0;
+  ThreeUniquePoints() : pts_() {}
+  void add(const Vec3f & v) {
+    bool same_found(false);
+    for( const auto & p : pts_ ) {
+      if( v == p ) {
+        same_found = true;
+        break;
+      }
+    }
+    if( same_found ) return;
+#define TUPSIZE 3
+    if( pts_.size() < TUPSIZE ) {
+      pts_.push_back(v);
+      return;
+    } else {
+      pts_[pos_] = v;
+      pos_ = (pos_ + 1) % TUPSIZE;
+    }
+  }
+  void clip(const SphericalPolygon & src, SphericalPolygon & dest, const Vec3f & delta) {
+    int i(1);
+    src.clip(pts_[0] - delta, dest);
+    for( ; i < pts_.size(); ) {
+      dest.clip(pts_[i++] - delta, tupTemp_);
+      dest.swap(tupTemp_);
+    }
+  }
+};
+
+//  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+template< typename Convex >
+bool sphericalDisjoint(const Convex & a, const Convex & b) {
+  static SphericalPolygon positiveBound, tempPoly;
+  int vA, vB;
+  Vec3f dir(b.vertex(0) - a.vertex(0));
+  if( ! a.differenceCoversZeroInDir(b, vA, vB, dir) ) return true;
+  positiveBound.clear();
+  positiveBound.emplace_back(dir);
+  positiveBound.clip(b.vertex(vB) - a.vertex(vA), tempPoly); positiveBound.swap(tempPoly);
+  if( positiveBound.empty() ) return false;
+  do {
+    if( ! a.differenceCoversZeroInDir(b, vA, vB, positiveBound.averageDirection()) ) return true;
+    if(planeStatPerPair >= INTER_MAX_ITER) {
+      ++nbFails;
+        DebugOn("fail "<<endl);
+      return false;
+    }
+    positiveBound.clip(b.vertex(vB) - a.vertex(vA), tempPoly); positiveBound.swap(tempPoly);
+    if( positiveBound.empty() ) return false;
+  } while( true );
+}
+template< typename Convex >
+bool test_general(vector<vector<double>> vec_a, vector<vector<double>> vec_b){
+  vector<Convex> convexes;
+  convexes.reserve(2);
+    convexes.emplace_back(vec_a);
+    convexes.emplace_back(vec_b);
+    
+    auto res=sphericalDisjoint(convexes[0], convexes[1]);
+    return res;
+
+}
+indices preprocess_poltyope_intersect(const vector<vector<double>>& point_cloud_data, const vector<vector<double>>& point_cloud_model, const indices& old_cells, double roll_min, double roll_max, double pitch_min, double pitch_max, double yaw_min, double yaw_max, double shift_min_x, double shift_max_x, double shift_min_y, double shift_max_y, double shift_min_z, double shift_max_z, const vector<vector<vector<double>>>& model_voronoi_normals, const vector<vector<double>>& model_face_intercept, const vector<vector<vector<double>>>& model_voronoi_vertices, vector<int>& new_model_pts, indices& new_model_ids, param<>& dist_cost, double upper_bound, int nb_total_threads){
+    nbFails=0;
+    planeStatPerPair = 0;
+
+    
+        double time_start = get_wall_time();
+        int new_test=0;
+        shared_ptr<pair<double,double>> new_x1_bounds = make_shared<pair<double,double>>();
+        shared_ptr<pair<double,double>> new_y1_bounds = make_shared<pair<double,double>>();
+        shared_ptr<pair<double,double>> new_z1_bounds = make_shared<pair<double,double>>();
+        shared_ptr<pair<double,double>> x1_bounds = make_shared<pair<double,double>>();
+        shared_ptr<pair<double,double>> y1_bounds = make_shared<pair<double,double>>();
+        shared_ptr<pair<double,double>> z1_bounds = make_shared<pair<double,double>>();
+        var<> yaw("yaw", yaw_min, yaw_max), pitch("pitch", pitch_min, pitch_max), roll("roll", roll_min, roll_max);
+        yaw.in(R(1)); pitch.in(R(1));roll.in(R(1));
+        func<> r11 = cos(yaw)*cos(roll);
+        func<> r12 = cos(yaw)*sin(roll)*sin(pitch) - sin(yaw)*cos(pitch);
+        func<> r13 = cos(yaw)*sin(roll)*cos(pitch) + sin(yaw)*sin(pitch);
+        func<> r21 = sin(yaw)*cos(roll);
+        func<> r22 = sin(yaw)*sin(roll)*sin(pitch) + cos(yaw)*cos(pitch);
+        func<> r23 = sin(yaw)*sin(roll)*cos(pitch) - cos(yaw)*sin(pitch);
+        func<> r31 = sin(-1*roll);
+        func<> r32 = cos(roll)*sin(pitch);
+        func<> r33 = cos(roll)*cos(pitch);
+        
+        
+        var<> theta11("theta11",  std::max(-1.,r11._range->first), std::min(1.,r11._range->second)), theta12("theta12", std::max(-1.,r12._range->first), std::min(1.,r12._range->second)), theta13("theta13", std::max(-1.,r13._range->first), std::min(1.,r13._range->second));
+        var<> theta21("theta21", std::max(-1.,r21._range->first), std::min(1.,r21._range->second)), theta22("theta22", std::max(-1.,r22._range->first), std::min(1.,r22._range->second)), theta23("theta23", std::max(-1.,r23._range->first), std::min(1.,r23._range->second));
+        var<> theta31("theta31", std::max(-1.,r31._range->first), std::min(1.,r31._range->second)), theta32("theta32", std::max(-1.,r32._range->first), std::min(1.,r32._range->second)), theta33("theta33", std::max(-1.,r33._range->first), std::min(1.,r33._range->second));
+        
+        var<> x_shift("x_shift", shift_min_x, shift_max_x), y_shift("y_shift", shift_min_y, shift_max_y), z_shift("z_shift", shift_min_z, shift_max_z);
+        indices valid_cells("valid_cells");
+        map<int,vector<int>> valid_cells_map;
+        map<int, vector<double>> dist_cost_map;
+        int nd=point_cloud_data.size();
+        int nm=point_cloud_model.size();
+        vector<double> dist_i;
+        vector<double> sphere_inner_sq, sphere_outer_sq;
+        vector<double> zeros = {0,0,0};
+        vector<shared_ptr<Model<double>>> batch_models;
+        int missed=0;
+        vector<double> x_lb, x_ub, y_lb, y_ub, z_lb, z_ub;
+        vector<vector<vector<double>>> box;
+        vector<vector<double>> box_i;
+        vector<double> coord_i;
+        coord_i.resize(3);
+        double shift_mag_max=std::max(pow(shift_min_x,2),pow(shift_max_x,2))+std::max(pow(shift_min_y,2),pow(shift_max_y,2))+std::max(pow(shift_min_z,2),pow(shift_max_z,2));
+        double shift_mag_max_root=sqrt(shift_mag_max);
+        for(auto i=0;i<nd;i++){
+          //  auto max_dist_i = get_max_dist(roll_min, roll_max, pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, point_cloud_data[i], zeros, false);
+            //dist_i.push_back(max_dist_i);
+            
+           // auto d_root=sqrt(pow(point_cloud_data.at(i)[0],2)+pow(point_cloud_data.at(i)[1],2)+pow(point_cloud_data.at(i)[2],2));
+           // sphere_inner_sq.push_back(pow((d_root-shift_mag_max_root),2));
+           // sphere_outer_sq.push_back(pow((d_root+shift_mag_max_root),2));
+            
+            x1_bounds->first = point_cloud_data.at(i)[0];
+            x1_bounds->second = point_cloud_data.at(i)[0];
+            y1_bounds->first = point_cloud_data.at(i)[1];
+            y1_bounds->second = point_cloud_data.at(i)[1];
+            z1_bounds->first = point_cloud_data.at(i)[2];
+            z1_bounds->second = point_cloud_data.at(i)[2];
+            auto x_range  = get_product_range(x1_bounds, theta11._range);
+            auto y_range  = get_product_range(y1_bounds, theta12._range);
+            auto z_range  = get_product_range(z1_bounds, theta13._range);
+            *new_x1_bounds = {x_range->first + y_range->first + z_range->first + shift_min_x,
+                x_range->second + y_range->second + z_range->second+ shift_max_x};
+            x_lb.push_back(x_range->first + y_range->first + z_range->first + shift_min_x);
+            x_ub.push_back(x_range->second + y_range->second + z_range->second+ shift_max_x);
+            x_range  = get_product_range(x1_bounds, theta21._range);
+            y_range  = get_product_range(y1_bounds, theta22._range);
+            z_range  = get_product_range(z1_bounds, theta23._range);
+            *new_y1_bounds = {x_range->first + y_range->first + z_range->first + shift_min_y,
+                x_range->second + y_range->second + z_range->second+ shift_max_y};
+            y_lb.push_back(x_range->first + y_range->first + z_range->first + shift_min_y);
+            y_ub.push_back(x_range->second + y_range->second + z_range->second+ shift_max_y);
+            x_range  = get_product_range(x1_bounds, theta31._range);
+            y_range  = get_product_range(y1_bounds, theta32._range);
+            z_range  = get_product_range(z1_bounds, theta33._range);
+            *new_z1_bounds = {x_range->first + y_range->first + z_range->first + shift_min_z,
+                x_range->second + y_range->second + z_range->second+ shift_max_z};
+            z_lb.push_back(x_range->first + y_range->first + z_range->first + shift_min_z);
+            z_ub.push_back(x_range->second + y_range->second + z_range->second+ shift_max_z);
+            coord_i[0]=x_lb[i];
+            coord_i[1]=y_lb[i];
+            coord_i[2]=z_lb[i];
+            box_i.push_back(coord_i);
+            coord_i[0]=x_lb[i];
+            coord_i[1]=y_ub[i];
+            coord_i[2]=z_lb[i];
+            box_i.push_back(coord_i);
+            coord_i[0]=x_ub[i];
+            coord_i[1]=y_ub[i];
+            coord_i[2]=z_lb[i];
+            box_i.push_back(coord_i);
+            coord_i[0]=x_ub[i];
+            coord_i[1]=y_lb[i];
+            coord_i[2]=z_lb[i];
+            box_i.push_back(coord_i);
+            coord_i[0]=x_lb[i];
+            coord_i[1]=y_lb[i];
+            coord_i[2]=z_ub[i];
+            box_i.push_back(coord_i);
+            coord_i[0]=x_lb[i];
+            coord_i[1]=y_ub[i];
+            coord_i[2]=z_ub[i];
+            box_i.push_back(coord_i);
+            coord_i[0]=x_ub[i];
+            coord_i[1]=y_ub[i];
+            coord_i[2]=z_ub[i];
+            box_i.push_back(coord_i);
+            coord_i[0]=x_ub[i];
+            coord_i[1]=y_lb[i];
+            coord_i[2]=z_ub[i];
+            box_i.push_back(coord_i);
+            box.push_back(box_i);
+            box_i.clear();
+        }
+        set<int> unique_model_pts;
+        for (int j = 0; j<nm; j++) {
+            auto vertices=model_voronoi_vertices.at(j);
+            for(auto i=0;i<nd;i++){
+                if(!old_cells.has_key(to_string(i+1)+","+to_string(j+1))){
+                    DebugOn("continued");
+                    continue;
+                }
+                auto res=test_general<VerticesOnly>(box[i],vertices);
+                DebugOff("i "<<i <<" j "<<j<<" "<<res<<endl);
+                if(!res){
+                if(unique_model_pts.insert(j).second){
+                    new_model_pts.push_back(j);
+                    new_model_ids.insert(to_string(i));
+                }
+                valid_cells_map[i].push_back(j);
+                }
+            }
+        }
+    for(auto i=0;i<nd;i++){
+        DebugOff(valid_cells_map[i].size()<<endl);
+    }
+
+        for (const auto &vcel:valid_cells_map) {
+            auto key_data=to_string(vcel.first+1);
+          //  auto cost_data=dist_cost_map[vcel.first];
+            int count=0;
+            for (auto const model_id: vcel.second) {
+                auto key=key_data+","+to_string(model_id+1);
+                valid_cells.insert(key);
+    //            dist_cost.add_val(key, cost_data[count++]);
+            }
+        }
+        DebugOn("Number of old pairs = " << old_cells.size() << endl);
+        DebugOn("Number of valid cells = " << valid_cells.size() << endl);
+        DebugOn("Number of discarded pairs = " << old_cells.size() - valid_cells.size() << endl);
+      //  DebugOn("Number of discarded pairs by inner sphere test = " << new_test << endl);
+    //    valid_cells.print();
+//        time_end = get_wall_time();
+//        prep_time = time_end - time_start;
+//        DebugOn("Voronoi preprocessing time = " << prep_time << endl);
+    auto time_end = get_wall_time();
+    auto prep_time = time_end - time_start;
+    DebugOn("Voronoi preprocessing time = " << prep_time << endl);
+        return valid_cells;
+    }
+
 
 /* Save LAZ files */
 void save_laz(const string& fname, const vector<vector<double>>& point_cloud1, const vector<vector<double>>& point_cloud2){
