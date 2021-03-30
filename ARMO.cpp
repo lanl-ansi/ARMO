@@ -1,4 +1,4 @@
-nclude <stdio.h>
+#include <stdio.h>
 #include <gravity/solver.h>
 #ifdef USE_OPT_PARSER
 #include <optionParser.hpp>

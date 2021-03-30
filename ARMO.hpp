@@ -1,4 +1,4 @@
-fndef _ARMO_H
+#ifndef _ARMO_H
 #define _ARMO_H
 #include <map>
 #include <string>
