@@ -1,4 +1,4 @@
-nclude_directories(${PROJECT_INCLUDE_DIR})
+include_directories(${PROJECT_INCLUDE_DIR})
 
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
