@@ -57,7 +57,7 @@ struct SphericalPolygon : public std::vector<SphericalPolygonElement> {
 
   void clip(const Vec3f & OrigVertex, const Vec3f & silVertex, SphericalPolygon & result, bool doClean=true) const {
     // PRECONDITION : clipNorth, and all northes are normalized.
-#define _ray_spherical_eps 1e-8f
+#define _ray_spherical_eps 1e-6f
     const int n = size();
     result.clear();
     switch( n ) {
@@ -167,9 +167,10 @@ struct SphericalPolygon : public std::vector<SphericalPolygonElement> {
     }
   }
   void clip(const Vec3f & silVertex, SphericalPolygon & result, bool doClean=true) const {
-    clip(silVertex, silVertex, result, false);
+    clip(silVertex, silVertex, result, doClean);
   }
 };
 
 #endif // RAY_PHERICAL_H
+
 

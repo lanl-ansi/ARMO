@@ -13,6 +13,8 @@
 #include "ARMO.hpp"
 #include <gravity/KDTreeVectorOfVectorsAdaptor.h>
 #include <time.h>
+#include "spherical.h"
+#include "convexes.h"
 using namespace std;
 
 #ifdef USE_VORO
