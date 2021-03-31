@@ -15,7 +15,6 @@
 #include <time.h>
 using namespace std;
 
-
 #ifdef USE_VORO
 #include "voro++.hh"
 using namespace voro;

@@ -1,3 +1,7 @@
+cmake_minimum_required(VERSION 3.2)
+
+project(ARMO)
+
 include_directories(${PROJECT_INCLUDE_DIR})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
@@ -9,6 +13,10 @@ option(Debug "Turn on debug mode" OFF)
 # which point to directories outside the build tree to the install RPATH
 #SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+set_directory_properties(PROPERTIES EP_BASE ${CMAKE_BINARY_DIR}/third_party)
+get_directory_property(THIRDPARTY_BASE_PATH EP_BASE)
+
+set(THIRDPARTY_INSTALL_PATH ${THIRDPARTY_BASE_PATH})
 
 # the RPATH to be used when installing, but only if it's not a system directory
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:'$ORIGIN/lib'")
@@ -98,7 +106,7 @@ else(Gravity_FOUND)
  set(ADD_Gravity TRUE)
  message(STATUS "Will download Gravity library from https://github.com/coin-or/Gravity.git")
  include(ExternalGravity)
- set(Gravity_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Install/gravity/src/libgravity.a) 
+ set(Gravity_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Install/gravity/lib/libgravity.a) 
 endif()
 endif()
 
@@ -118,6 +126,53 @@ else(LASlib_FOUND)
 endif()
 endif()
 
+# Compiler options
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O4 -Ofast")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,'\$ORIGIN/lib'")
+
+
+if(LINUX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif()
+# Build options
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+
+set(CMAKE_BUILD_TYPE "Release")
+if (Debug)
+set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/Debug)
+endif()
+
+if(Cov)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fprofile-arcs -lgcov")
+endif()
 
 add_executable(ARMO ${ARMO_SOURCES} ${ARMO_HEADERS})
-target_link_libraries(ARMO gravity)
+
+if(ADD_EIGEN)
+ add_dependencies(ARMO eigen)
+endif(ADD_EIGEN)
+if(ADD_GoICP)
+ add_dependencies(ARMO GoICP)
+endif(ADD_GoICP)
+
+if(ADD_QHULL)
+ add_dependencies(ARMO qhull)
+endif()
+
+if(ADD_VORO)
+ add_dependencies(ARMO voro)
+endif()
+
+add_dependencies(ARMO gravity)
+
+if(OPT_PARSER)
+add_dependencies(ARMO opt_parser)
+endif()
+target_link_libraries(ARMO ${LASlib_LIBRARIES} ${QHULL_LIBRARIES} ${VORO_LIBRARIES} ${Gravity_LIBRARIES})
+

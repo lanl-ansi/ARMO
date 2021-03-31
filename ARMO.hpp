@@ -13,6 +13,7 @@
 #include <gravity/ConfigMap.hpp>
 
 using namespace std;
+using namespace gravity;
 
 /* Read input files */
 void read_data(vector<pair<double,double>>& bounds, const rapidcsv::Document& doc,vector<vector<double>>& point_cloud, vector<vector<double>>& uav, bool only_keep_nadir=false);
