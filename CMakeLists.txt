@@ -174,5 +174,5 @@ add_dependencies(ARMO gravity)
 if(OPT_PARSER)
 add_dependencies(ARMO opt_parser)
 endif()
-target_link_libraries(ARMO ${LASlib_LIBRARIES} ${QHULL_LIBRARIES} ${VORO_LIBRARIES} ${Gravity_LIBRARIES})
+target_link_libraries(ARMO ${LASlib_LIBRARIES} ${QHULL_LIBRARIES} ${VORO_LIBRARIES} ${Gravity_LIBRARIES} ${IPOPT_LIBRARIES})
 
