@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <gravity/solver.h>
+#include <gravity/GurobiProgram.h>
 #ifdef USE_OPT_PARSER
 #include <optionParser.hpp>
 #endif
 #include <gravity/rapidcsv.h>
 #ifdef USE_MATPLOT
 #include <gravity/matplotlibcpp.h>
+#endif
+#ifdef USE_GUROBI
+#include <gravity/GurobiProgram.h>
 #endif
 #include <queue>
 #include "lasreader.hpp"
