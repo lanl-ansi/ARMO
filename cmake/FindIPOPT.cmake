@@ -7,7 +7,7 @@ find_path(IPOPT_INCLUDE_DIR
 	HINTS /usr/local/include/coin
 	HINTS ${IPOPT_ROOT_DIR}/include/coin
 	HINTS ${IPOPT_ROOT_DIR}/include
-	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/include/coin
+	HINTS ${GRAVITY_ROOT_DIR}/thirdparty/ipopt/include/coin-or
 )
 
 if(APPLE)
@@ -15,6 +15,7 @@ find_library(IPOPT_LIBRARY
 	libipopt.dylib
 	HINTS /usr/local/lib
 	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
+	HINTS ${GRAVITY_ROOT_DIR}/thirdparty/ipopt/lib
 	HINTS ${IPOPT_ROOT_DIR}/lib
 )
 elseif(UNIX)
@@ -22,7 +23,7 @@ find_library(IPOPT_LIBRARY
 	libipopt.so
 	HINTS /usr/local/lib
 	HINTS ${IPOPT_ROOT_DIR}/lib
-	HINTS ${PROJECT_SOURCE_DIR}/third_party/CoinIpopt/build/lib
+	HINTS ${GRAVITY_ROOT_DIR}/thirdparty/ipopt/lib
 )
 endif()
 

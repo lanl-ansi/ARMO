@@ -15,16 +15,16 @@ ExternalProject_Add(gravity
 )
 
 list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-DGravity_ROOT_DIR:PATH=${Gravity_ROOT_DIR}")
-set(Gravity_INCLUDE_DIRS ${Gravity_ROOT_DIR}/include)
-include_directories(${Gravity_INCLUDE_DIRS})
-find_library(Gravity_LIBRARY1
+set(GRAVITY_INCLUDE_DIRS ${Gravity_ROOT_DIR}/include)
+include_directories(${GRAVITY_INCLUDE_DIRS})
+find_library(GRAVITY_LIBRARY1
         libgravity.a
         HINTS /usr/local/lib
         HINTS ${Gravity_ROOT_DIR}/lib
 )
 
 
-set(Gravity_LIBRARIES  ${Gravity_LIBRARY1})
-set(LIBS ${LIBS} ${Gravity_LIBRARIES})
+set(GRAVITY_LIBRARIES  ${GRAVITY_LIBRARY1})
+set(LIBS ${LIBS} ${GRAVITY_LIBRARIES})
 unset(Gravity_DOWNLOAD_URL)
 unset(Gravity_ROOT)
