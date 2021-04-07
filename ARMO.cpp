@@ -4944,7 +4944,7 @@ indices preprocess_poltyope_intersect(const vector<vector<double>>& point_cloud_
             auto vertices=model_voronoi_vertices.at(j);
             for(auto i=0;i<nd;i++){
                 if(!old_cells.has_key(to_string(i+1)+","+to_string(j+1))){
-                    DebugOn("continued");
+                    DebugOff("continued");
                     continue;
                 }
                 auto res=test_general<VerticesOnly>(box[i],vertices);
@@ -4961,7 +4961,11 @@ indices preprocess_poltyope_intersect(const vector<vector<double>>& point_cloud_
     for(auto i=0;i<nd;i++){
         DebugOff(valid_cells_map[i].size()<<endl);
     }
-
+    bool found_all=true;
+    if(valid_cells_map.size()<nd){
+        found_all=false;
+    }
+    if(found_all){
         for (const auto &vcel:valid_cells_map) {
             auto key_data=to_string(vcel.first+1);
           //  auto cost_data=dist_cost_map[vcel.first];
@@ -4969,12 +4973,26 @@ indices preprocess_poltyope_intersect(const vector<vector<double>>& point_cloud_
             for (auto const model_id: vcel.second) {
                 auto key=key_data+","+to_string(model_id+1);
                 valid_cells.insert(key);
+                count++;
     //            dist_cost.add_val(key, cost_data[count++]);
             }
+            if(count==0){
+                DebugOn("no possible match found for data point "<<key_data<<endl);
+                found_all=false;
+                break;
+            }
         }
+    }
+    if(found_all){
         DebugOn("Number of old pairs = " << old_cells.size() << endl);
         DebugOn("Number of valid cells = " << valid_cells.size() << endl);
         DebugOn("Number of discarded pairs = " << old_cells.size() - valid_cells.size() << endl);
+        
+    }
+    else{
+        
+        DebugOn("Number of valid cells = " << 0 << endl);
+    }
       //  DebugOn("Number of discarded pairs by inner sphere test = " << new_test << endl);
     //    valid_cells.print();
 //        time_end = get_wall_time();
@@ -4988,7 +5006,7 @@ indices preprocess_poltyope_intersect(const vector<vector<double>>& point_cloud_
 vector<double> BranchBound(vector<vector<double>>& point_cloud_model, vector<vector<double>>& point_cloud_data, param<>& norm_x, param<>& norm_y, param<>& norm_z,  param<>& intercept, const vector<int>& init_matching, const vector<double>& init_err_per_point, param<>& model_radius, vector<vector<vector<double>>> model_voronoi_normals, vector<vector<double>> model_face_intercept, vector<vector<vector<double>>> model_voronoi_vertices, vector<int>& new_model_pts, indices& new_model_ids, param<>& dist_cost, bool relax_ints, bool relax_sdp, bool rigid_transf) {
     /* INPUT BOUNDS */
     double time_start = get_wall_time();
-    double total_time_max = 9000;
+    double total_time_max = 3000;
     double shift_min_x =  -0.1, shift_max_x = 0.1, shift_min_y = -0.1,shift_max_y = 0.1,shift_min_z = -0.1,shift_max_z = 0.1;
     double yaw_min = -10*pi/180., yaw_max = 10*pi/180., pitch_min =-10*pi/180.,pitch_max = 10*pi/180.,roll_min =-10*pi/180.,roll_max = 10*pi/180.;
     indices N1 = range(1,point_cloud_data.size());
@@ -5057,7 +5075,7 @@ vector<double> BranchBound(vector<vector<double>>& point_cloud_model, vector<vec
         best_lb = lb_queue.top().lb;
         opt_gap = (best_ub - best_lb)/best_ub;
         if(opt_gap_old-opt_gap <= eps){
-            //max_time*=2;
+            max_time*=2;
         }
         opt_gap_old=opt_gap;
         DebugOn("Best UB so far = " << to_string_with_precision(best_ub,6) << endl);
