@@ -5301,8 +5301,9 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
 //    double max_model_y=min_max_model.at(1).second;
 //    double min_model_z=min_max_model.at(2).first;
 //    double max_model_z=min_max_model.at(2).second;
-    var<> new_xm("new_xm", xm_min, xm_max), new_ym("new_ym", ym_min, ym_max), new_zm("new_zm", zm_min, zm_max);
-    var<> delta("delta", pos_);
+    //var<> new_xm("new_xm", xm_min, xm_max), new_ym("new_ym", ym_min, ym_max), new_zm("new_zm", zm_min, zm_max);
+    var<> new_xm("new_xm"), new_ym("new_ym"), new_zm("new_zm");
+    var<> delta("delta");
     
     bool hybrid=true;
     
@@ -6022,17 +6023,17 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
         }
     }
     param<> x_new_lb("x_new_lb");
-    x_new_lb.in(N1);
+    //x_new_lb.in(N1);
     param<> x_new_ub("x_new_ub");
-    x_new_ub.in(N1);
+    //x_new_ub.in(N1);
     param<> y_new_lb("y_new_lb");
-    y_new_lb.in(N1);
+    //y_new_lb.in(N1);
     param<> y_new_ub("y_new_ub");
-    y_new_ub.in(N1);
+    //y_new_ub.in(N1);
     param<> z_new_lb("z_new_lb");
-    z_new_lb.in(N1);
+    //z_new_lb.in(N1);
     param<> z_new_ub("z_new_ub");
-    z_new_ub.in(N1);
+    //z_new_ub.in(N1);
     shared_ptr<pair<double,double>> new_x1_bounds = make_shared<pair<double,double>>();
     shared_ptr<pair<double,double>> new_y1_bounds = make_shared<pair<double,double>>();
     shared_ptr<pair<double,double>> new_z1_bounds = make_shared<pair<double,double>>();
@@ -6051,22 +6052,22 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
         auto z_range  = get_product_range(z1_bounds, theta13._range);
         *new_x1_bounds = {x_range->first + y_range->first + z_range->first + new_shift_min_x,
             x_range->second + y_range->second + z_range->second+ new_shift_max_x};
-        x_new_lb.set_val(i, new_x1_bounds->first);
-        x_new_ub.set_val(i, new_x1_bounds->second);
+        x_new_lb.add_val(to_string(i+1), new_x1_bounds->first);
+        x_new_ub.add_val(to_string(i+1), new_x1_bounds->second);
         x_range  = get_product_range(x1_bounds, theta21._range);
         y_range  = get_product_range(y1_bounds, theta22._range);
         z_range  = get_product_range(z1_bounds, theta23._range);
         *new_y1_bounds = {x_range->first + y_range->first + z_range->first + new_shift_min_y,
             x_range->second + y_range->second + z_range->second+ new_shift_max_y};
-        y_new_lb.set_val(i, new_y1_bounds->first);
-        y_new_ub.set_val(i, new_y1_bounds->second);
+        y_new_lb.add_val(to_string(i+1), new_y1_bounds->first);
+        y_new_ub.add_val(to_string(i+1), new_y1_bounds->second);
         x_range  = get_product_range(x1_bounds, theta31._range);
         y_range  = get_product_range(y1_bounds, theta32._range);
         z_range  = get_product_range(z1_bounds, theta33._range);
         *new_z1_bounds = {x_range->first + y_range->first + z_range->first + new_shift_min_z,
             x_range->second + y_range->second + z_range->second+ new_shift_max_z};
-        z_new_lb.set_val(i, new_z1_bounds->first);
-        z_new_ub.set_val(i, new_z1_bounds->second);
+        z_new_lb.add_val(to_string(i+1), new_z1_bounds->first);
+        z_new_ub.add_val(to_string(i+1), new_z1_bounds->second);
     }
 //    var<> new_x1("new_x1", x_new_lb, x_new_ub),new_y1("new_y1", y_new_lb, y_new_ub),new_z1("new_z1", z_new_lb, z_new_ub);
     
@@ -6078,9 +6079,9 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
         Reg->add(new_x1.in(N1));
         Reg->add(new_y1.in(N1));
         Reg->add(new_z1.in(N1));
-//        Reg->add(new_xm.in(N1));
-//        Reg->add(new_ym.in(N1));
-//        Reg->add(new_zm.in(N1));
+       Reg->add(new_xm.in(N1));
+       Reg->add(new_ym.in(N1));
+       Reg->add(new_zm.in(N1));
       //  Reg->add(delta.in(N1));
         Reg->add(delta.in(R(1)));
         indices ids = indices("in_x");
@@ -6095,18 +6096,18 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
         
         auto ids1 = theta11.repeat_id(N1.size());
         Constraint<> Def_newxm("Def_newxm");
-        Def_newxm = new_x1-product(x2.in(ids),bin.in_matrix(1, 1));
-        Def_newxm += x1.in(N1)*theta11.in(ids1) + y1.in(N1)*theta12.in(ids1) + z1.in(N1)*theta13.in(ids1)+x_shift;
+        Def_newxm = new_xm-product(x2.in(ids),bin.in_matrix(1, 1))+new_x1;
+        //Def_newxm += x1.in(N1)*theta11.in(ids1) + y1.in(N1)*theta12.in(ids1) + z1.in(N1)*theta13.in(ids1)+x_shift;
         Reg->add(Def_newxm.in(N1)==0);
         
         Constraint<> Def_newym("Def_newym");
-        Def_newym = new_y1-product(y2.in(ids),bin.in_matrix(1, 1));
-        Def_newym += x1.in(N1)*theta21.in(ids1) + y1.in(N1)*theta22.in(ids1) + z1.in(N1)*theta23.in(ids1)+y_shift;
+        Def_newym = new_ym-product(y2.in(ids),bin.in_matrix(1, 1))+new_y1;
+       // Def_newym += x1.in(N1)*theta21.in(ids1) + y1.in(N1)*theta22.in(ids1) + z1.in(N1)*theta23.in(ids1)+y_shift;
         Reg->add(Def_newym.in(N1)==0);
         
         Constraint<> Def_newzm("Def_newzm");
-        Def_newzm = new_z1-product(z2.in(ids),bin.in_matrix(1, 1));
-        Def_newzm += x1.in(N1)*theta31.in(ids1) + y1.in(N1)*theta32.in(ids1) + z1.in(N1)*theta33.in(ids1)+z_shift;
+        Def_newzm = new_zm-product(z2.in(ids),bin.in_matrix(1, 1))+new_z1;
+       // Def_newzm += x1.in(N1)*theta31.in(ids1) + y1.in(N1)*theta32.in(ids1) + z1.in(N1)*theta33.in(ids1)+z_shift;
         Reg->add(Def_newzm.in(N1)==0);
         
         Constraint<> sum_newxm("sum_newxm");
@@ -6120,6 +6121,29 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
         Constraint<> sum_newzm("sum_newzm");
         sum_newzm = sum(new_zm.in(N1))-nd*z_shift;
         //Reg->add(sum_newzm==0);
+
+                //auto ids1 = theta11.repeat_id(N1.size());
+        Constraint<> x_rot1("x_rot1");
+        x_rot1 += new_x1 -x_shift;
+        x_rot1 -= x1.in(N1)*theta11.in(ids1) + y1.in(N1)*theta12.in(ids1) + z1.in(N1)*theta13.in(ids1);
+        Reg->add(x_rot1.in(N1)==0);
+
+        Constraint<> y_rot1("y_rot1");
+        y_rot1 += new_y1 - y_shift;
+        y_rot1 -= x1.in(N1)*theta21.in(ids1) + y1.in(N1)*theta22.in(ids1) + z1.in(N1)*theta23.in(ids1);
+        Reg->add(y_rot1.in(N1)==0);
+
+        Constraint<> z_rot1("z_rot1");
+        z_rot1 += new_z1 -z_shift;
+        z_rot1 -= x1.in(N1)*theta31.in(ids1) + y1.in(N1)*theta32.in(ids1) + z1.in(N1)*theta33.in(ids1);
+        Reg->add(z_rot1.in(N1)==0);
+        
+       // Constraint<> Def_delta("Def_delta");
+       // Def_delta=pow(new_x1, 2)+pow(new_y1, 2)+pow(new_z1, 2)-pow(delta,2);
+        //Reg->add(Def_delta.in(N1)<=0);
+        Constraint<> Def_delta("Def_delta");
+        Def_delta=sum(pow(new_xm,2))+sum(pow(new_ym,2))+sum(pow(new_zm,2))-delta;
+        Reg->add(Def_delta.in(range(0,0))<=0);
         
         //auto ids1 = theta11.repeat_id(N1.size());
 //        Constraint<> x_rot1("x_rot1");
@@ -6140,9 +6164,9 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
        // Constraint<> Def_delta("Def_delta");
        // Def_delta=pow(new_x1, 2)+pow(new_y1, 2)+pow(new_z1, 2)-pow(delta,2);
         //Reg->add(Def_delta.in(N1)<=0);
-        Constraint<> Def_delta("Def_delta");
-        Def_delta=sum(pow(new_x1,2))+sum(pow(new_y1,2))+sum(pow(new_z1,2))-delta;
-        Reg->add(Def_delta.in(range(0,0))<=0);
+        // Constraint<> Def_delta("Def_delta");
+        // Def_delta=sum(pow(new_x1,2))+sum(pow(new_y1,2))+sum(pow(new_z1,2))-delta;
+        // Reg->add(Def_delta.in(range(0,0))<=0);
         
         if(hybrid){
             auto idstheta = theta11.repeat_id(N1.size());
@@ -6196,6 +6220,10 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
             limit_neg_bin-=pow(x1,2)+pow(y1,2)+pow(z1,2);
             limit_neg_bin-=product(dm.in(ids),bin.in_matrix(1, 1));
            // Reg->add(limit_neg_bin.in(N1)<=0);
+
+            Constraint<> dist_data2("dist_data2");
+            dist_data2=x_new_lb*x_new_ub+y_new_lb*y_new_ub+z_new_lb*z_new_ub+pow((sqrt(pow(x1,2)+pow(y1,2)+pow(z1,2))-sqrt(shift_mag_max)),2)-new_x1*(x_new_ub+x_new_lb)-new_y1*(y_new_ub+y_new_lb)-new_z1*(z_new_ub+z_new_lb);
+            Reg->add(dist_data2.in(N1)<=0);
             
         }
     }
