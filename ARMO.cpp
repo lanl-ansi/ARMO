@@ -296,7 +296,7 @@ int main (int argc, char * argv[])
             indices N2 = range(1,point_cloud_model.size());
             indices valid_cells("valid_cells");
             valid_cells = indices(N1,N2);
-            bool preprocess = true, nonprop_scale = non_prop_scaling=="scale";
+            bool preprocess = false, nonprop_scale = non_prop_scaling=="scale";
             if(preprocess){
                 double scale = 1;
                 if(nonprop_scale)
@@ -307,9 +307,12 @@ int main (int argc, char * argv[])
                 /* Terminal output */
                 DebugOn("Preprocessing time = " << prep_time << endl);
             }
+	bool convex = false, relax_integers = false, relax_sdp = false;  
+	vector<pair<pair<int,int>,pair<int,int>>> incompatibles;
+            rot_trans = BranchBound(point_cloud_model, point_cloud_data, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, model_voronoi_normals, model_face_intercept, model_voronoi_vertices, new_model_pts, new_model_ids, dist_cost, relax_integers, relax_sdp, true);
             vector<pair<pair<int,int>,pair<int,int>>> incompatibles;
-            bool convex = false, relax_integers = false, relax_sdp = false;
-            auto NC_SOC_MIQCP = build_norm2_SOC_MIQCP(point_cloud_model, point_cloud_data, valid_cells, new_model_ids, dist_cost, roll_min, roll_max,  pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, rot_trans, convex, incompatibles, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, relax_integers, relax_sdp, nonprop_scale, perc_outliers);
+            //bool convex = false, relax_integers = false, relax_sdp = false;
+            /*auto NC_SOC_MIQCP = build_norm2_SOC_MIQCP(point_cloud_model, point_cloud_data, valid_cells, new_model_ids, dist_cost, roll_min, roll_max,  pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, rot_trans, convex, incompatibles, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, relax_integers, relax_sdp, nonprop_scale, perc_outliers);
             double time_limit = 300;
 #ifdef USE_GUROBI
             solver<> S(NC_SOC_MIQCP,gurobi);
@@ -320,7 +323,7 @@ int main (int argc, char * argv[])
             DebugOn("WARNING: this version was compiled without Gurobi, please install Gurobi and rerun cmake.\n");
             return 0;
 #endif
-            get_solution(NC_SOC_MIQCP, rot_trans, L2matching);
+            get_solution(NC_SOC_MIQCP, rot_trans, L2matching);*/
             
             apply_rot_trans(rot_trans, point_cloud_data);
             apply_rot_trans(rot_trans, initial_point_cloud_data);
@@ -5056,7 +5059,7 @@ vector<double> BranchBound(vector<vector<double>>& point_cloud_model, vector<vec
         best_lb = lb_queue.top().lb;
         opt_gap = (best_ub - best_lb)/best_ub;
         if(opt_gap_old-opt_gap <= eps){
-            max_time*=2;
+            //max_time*=2;
         }
         opt_gap_old=opt_gap;
         DebugOn("Best UB so far = " << to_string_with_precision(best_ub,6) << endl);
