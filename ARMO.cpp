@@ -307,11 +307,9 @@ int main (int argc, char * argv[])
                 /* Terminal output */
                 DebugOn("Preprocessing time = " << prep_time << endl);
             }
-	bool convex = false, relax_integers = false, relax_sdp = false;  
-	vector<pair<pair<int,int>,pair<int,int>>> incompatibles;
+	        bool convex = false, relax_integers = false, relax_sdp = false;  
+	        vector<pair<pair<int,int>,pair<int,int>>> incompatibles;
             rot_trans = BranchBound(point_cloud_model, point_cloud_data, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, model_voronoi_normals, model_face_intercept, model_voronoi_vertices, new_model_pts, new_model_ids, dist_cost, relax_integers, relax_sdp, true);
-            vector<pair<pair<int,int>,pair<int,int>>> incompatibles;
-            //bool convex = false, relax_integers = false, relax_sdp = false;
             /*auto NC_SOC_MIQCP = build_norm2_SOC_MIQCP(point_cloud_model, point_cloud_data, valid_cells, new_model_ids, dist_cost, roll_min, roll_max,  pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, rot_trans, convex, incompatibles, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, relax_integers, relax_sdp, nonprop_scale, perc_outliers);
             double time_limit = 300;
 #ifdef USE_GUROBI
