@@ -5075,7 +5075,7 @@ vector<double> BranchBound(vector<vector<double>>& point_cloud_model, vector<vec
         best_lb = lb_queue.top().lb;
         opt_gap = (best_ub - best_lb)/best_ub;
         if(opt_gap_old-opt_gap <= eps){
-            max_time*=2;
+            //max_time*=2;
         }
         opt_gap_old=opt_gap;
         DebugOn("Best UB so far = " << to_string_with_precision(best_ub,6) << endl);
