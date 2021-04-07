@@ -162,11 +162,11 @@ int main (int argc, char * argv[])
                 double dist_sq = std::pow(x - v[v_idx],2) + std::pow(y - v[v_idx+1],2) + std::pow(z - v[v_idx+2],2);
                 if(dist_sq>max_dist)
                     max_dist = dist_sq;
-                v_idx += 3;
                 vertices[0]=v[v_idx];
                 vertices[1]=v[v_idx+1];
                 vertices[2]=v[v_idx+2];
                 model_voronoi_vertices[idx][i]=vertices;
+                v_idx += 3;
             }
             model_voronoi_out_radius[idx] = std::sqrt(max_dist);/* the radius of the smallest ball enclosing the voronoi cell is the distance from the center to the farthest vertex */
             model_radius.add_val(to_string(idx+1), model_voronoi_out_radius[idx]);
