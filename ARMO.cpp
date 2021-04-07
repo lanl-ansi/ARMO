@@ -80,6 +80,13 @@ int main (int argc, char * argv[])
         vector<pair<double,double>> bounds(3);/* Bounds on x y and z of model points */
         DebugOn("Model file has " << model_nb_rows << " rows" << endl);
         DebugOn("Data file has " << data_nb_rows << " rows" << endl);
+        fwdm=1;
+        fwdd=1;
+        bool downsample=true;
+        if(downsample && data_nb_rows>10){
+            fwdm=4;
+            fwdd=2;
+        }
         for (int i = 0; i< model_nb_rows; i++) { // Input iterator
             auto x = Model_doc.GetCell<double>(0, i);
             auto y = Model_doc.GetCell<double>(1, i);
@@ -97,20 +104,23 @@ int main (int argc, char * argv[])
             if(bounds[2].second < z)
                 bounds[2].second = z;
             initial_point_cloud_model.push_back({x,y,z});
-            point_cloud_model.push_back({x,y,z});
+            if (i%fwdm==0)
+                point_cloud_model.push_back({x,y,z});
         }
         for (int i = 0; i< data_nb_rows; i++) { // Input iterator
             auto x = Data_doc.GetCell<double>(0, i);
             auto y = Data_doc.GetCell<double>(1, i);
             auto z = Data_doc.GetCell<double>(2, i);
             initial_point_cloud_data.push_back({x,y,z});
-            point_cloud_data.push_back({x,y,z});
+            if (i%fwdd==0)
+                point_cloud_data.push_back({x,y,z});
         }
         data_nb_rows=point_cloud_data.size();
         model_nb_rows=point_cloud_model.size();
         int reduced_nb_data = std::min(data_nb_rows, 80);
         int reduced_nb_model = std::min(model_nb_rows, 300);
         bool subsample = model_nb_rows>50;
+        subsample=false;
         if (subsample) {
             model_nb_rows = reduced_nb_model;
             data_nb_rows = reduced_nb_data;
@@ -309,7 +319,7 @@ int main (int argc, char * argv[])
             }
 	        bool convex = false, relax_integers = false, relax_sdp = false;  
 	        vector<pair<pair<int,int>,pair<int,int>>> incompatibles;
-            rot_trans = BranchBound(point_cloud_model, point_cloud_data, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, model_voronoi_normals, model_face_intercept, model_voronoi_vertices, new_model_pts, new_model_ids, dist_cost, relax_integers, relax_sdp, true);
+            //rot_trans = BranchBound(point_cloud_model, point_cloud_data, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, model_voronoi_normals, model_face_intercept, model_voronoi_vertices, new_model_pts, new_model_ids, dist_cost, relax_integers, relax_sdp, true);
             /*auto NC_SOC_MIQCP = build_norm2_SOC_MIQCP(point_cloud_model, point_cloud_data, valid_cells, new_model_ids, dist_cost, roll_min, roll_max,  pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, rot_trans, convex, incompatibles, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, relax_integers, relax_sdp, nonprop_scale, perc_outliers);
             double time_limit = 300;
 #ifdef USE_GUROBI
@@ -322,7 +332,7 @@ int main (int argc, char * argv[])
             return 0;
 #endif
             get_solution(NC_SOC_MIQCP, rot_trans, L2matching);*/
-            
+            auto SOC_MIP = build_linobj_convex(point_cloud_model, point_cloud_data, valid_cells, roll_min, roll_max, pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, rot_trans, separate=false, incompatibles, norm_x, norm_y, norm_z, intercept,L2matching, L2err_per_point, false);
             apply_rot_trans(rot_trans, point_cloud_data);
             apply_rot_trans(rot_trans, initial_point_cloud_data);
             
