@@ -6227,12 +6227,56 @@ shared_ptr<Model<double>> build_linobj_convex(vector<vector<double>>& point_clou
             limit_pos-= 2*(new_zm*z1*theta33.in(idstheta));
             limit_pos-=pow(x1,2)+pow(y1,2)+pow(z1,2);
             limit_pos-=pow(new_xm,2)+pow(new_ym,2)+pow(new_zm,2);
-                // Reg->add(limit_pos.in(N1)<=0);
+
+            var<> ex("ex");
+           // Reg->add(ex.in(N1));
             param<> dm("dm");
+            param<> d_sq_root("d_sq_root");
             for(auto i=0;i<nm;i++){
                 auto dmd=pow(point_cloud_model.at(i)[0],2)+pow(point_cloud_model.at(i)[1],2)+pow(point_cloud_model.at(i)[2],2);
+                auto dmd_r=sqrt(dmd);
                 dm.add_val(to_string(i+1), dmd);
+                d_sq_root.add_val(to_string(i+1), dmd_r);
             }
+            
+            param<> cd("cd");
+            for(auto i=0;i<nd;i++){
+                auto dmd=pow(point_cloud_data.at(i)[0],2)+pow(point_cloud_data.at(i)[1],2)+pow(point_cloud_data.at(i)[2],2);
+                auto dmd_r=2*(sqrt(dmd)+sqrt(shift_mag_max));
+                cd.add_val(to_string(i+1), dmd_r);
+            }
+            
+            indices idsij = indices("idsij");
+            idsij.add_empty_row();
+            
+            param<> dm_root("dm_root");
+            dm_root.in(cells);
+            for(auto i=0;i<nd;i++){
+                auto di=pow(point_cloud_data.at(i)[0],2)+pow(point_cloud_data.at(i)[1],2)+pow(point_cloud_data.at(i)[2],2);
+                auto di_r=2*(sqrt(di)+sqrt(shift_mag_max));
+                for(auto j=1;j<=nm;j++){
+                    if(cells.has_key(to_string(i+1)+","+to_string(j))){
+                        auto dmd=pow(point_cloud_model.at(i)[0],2)+pow(point_cloud_model.at(i)[1],2)+pow(point_cloud_model.at(i)[2],2);
+                        auto dmd_r=sqrt(dmd)*di_r;
+                        dm_root.set_val(to_string(i+1)+","+to_string(j), dmd_r);
+                        idsij.add_in_row(i, to_string(i+1)+","+to_string(j));
+                    }
+                }
+            }
+            
+            Constraint<> delta_lower("delta_lower");
+            delta_lower=new_x1*new_x1+new_y1*new_y1+new_z1*new_z1+product(dm.in(ids),bin.in_matrix(1, 1))-cd*ex-delta;
+            //delta_lower=new_x1*new_x1+new_y1*new_y1+new_z1*new_z1+product(dm.in(ids),bin.in_matrix(1, 1))-product(dm_root.in(idsij), bin.in_matrix(1, 1))-delta;
+            //delta_lower=new_x1*new_x1+new_y1*new_y1+new_z1*new_z1+product(dm.in(ids),bin.in_matrix(1, 1))-cd*product(d_sq_root.in(idsij), bin.in_matrix(1, 1))-delta;
+           // Reg->add(delta_lower.in(N1)<=0);
+
+
+                // Reg->add(limit_pos.in(N1)<=0);
+
+            Constraint<> def_ex("def_ex");
+            def_ex=ex-product(d_sq_root.in(ids),bin.in_matrix(1, 1));
+            //Reg->add(def_ex.in(N1)==0);
+         
             
             Constraint<> dist_model("dist_model");
             dist_model=pow(new_xm,2)+pow(new_ym,2)+pow(new_zm,2)-product(dm.in(ids),bin.in_matrix(1, 1));
