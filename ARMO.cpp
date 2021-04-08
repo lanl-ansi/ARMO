@@ -80,12 +80,12 @@ int main (int argc, char * argv[])
         vector<pair<double,double>> bounds(3);/* Bounds on x y and z of model points */
         DebugOn("Model file has " << model_nb_rows << " rows" << endl);
         DebugOn("Data file has " << data_nb_rows << " rows" << endl);
-        fwdm=1;
-        fwdd=1;
+        int fwdm=1;
+        int fwdd=1;
         bool downsample=true;
         if(downsample && data_nb_rows>10){
             fwdm=4;
-            fwdd=2;
+            fwdd=4;
         }
         for (int i = 0; i< model_nb_rows; i++) { // Input iterator
             auto x = Model_doc.GetCell<double>(0, i);
@@ -317,6 +317,8 @@ int main (int argc, char * argv[])
                 /* Terminal output */
                 DebugOn("Preprocessing time = " << prep_time << endl);
             }
+valid_cells= preprocess_poltyope_intersect(point_cloud_data,  point_cloud_model, valid_cells, roll_min, roll_max, pitch_min, pitch_max,yaw_min, yaw_max, shift_min_x,  shift_max_x,shift_min_y, shift_max_y, shift_min_z,  shift_max_z,  model_voronoi_normals,  model_face_intercept,  model_voronoi_vertices, new_model_pts,  new_model_ids, dist_cost, upper_bound, nb_total_threads);
+                valid_cells.print();
 	        bool convex = false, relax_integers = false, relax_sdp = false;  
 	        vector<pair<pair<int,int>,pair<int,int>>> incompatibles;
             //rot_trans = BranchBound(point_cloud_model, point_cloud_data, norm_x, norm_y, norm_z, intercept, L2matching, L2err_per_point, model_radius, model_voronoi_normals, model_face_intercept, model_voronoi_vertices, new_model_pts, new_model_ids, dist_cost, relax_integers, relax_sdp, true);
@@ -332,7 +334,7 @@ int main (int argc, char * argv[])
             return 0;
 #endif
             get_solution(NC_SOC_MIQCP, rot_trans, L2matching);*/
-            auto SOC_MIP = build_linobj_convex(point_cloud_model, point_cloud_data, valid_cells, roll_min, roll_max, pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, rot_trans, separate=false, incompatibles, norm_x, norm_y, norm_z, intercept,L2matching, L2err_per_point, false);
+            auto SOC_MIP = build_linobj_convex(point_cloud_model, point_cloud_data, valid_cells, roll_min, roll_max, pitch_min, pitch_max, yaw_min, yaw_max, shift_min_x, shift_max_x, shift_min_y, shift_max_y, shift_min_z, shift_max_z, rot_trans, false, incompatibles, norm_x, norm_y, norm_z, intercept,L2matching, L2err_per_point, false);
             apply_rot_trans(rot_trans, point_cloud_data);
             apply_rot_trans(rot_trans, initial_point_cloud_data);
             
