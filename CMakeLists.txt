@@ -13,15 +13,13 @@ option(Debug "Turn on debug mode" OFF)
 # which point to directories outside the build tree to the install RPATH
 #SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-set_directory_properties(PROPERTIES EP_BASE ${CMAKE_BINARY_DIR}/third_party)
-get_directory_property(THIRDPARTY_BASE_PATH EP_BASE)
 
-set(THIRDPARTY_INSTALL_PATH ${THIRDPARTY_BASE_PATH})
+set(THIRDPARTY_INSTALL_PATH ${CMAKE_BINARY_DIR}/third_party)
 
 # the RPATH to be used when installing, but only if it's not a system directory
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:'$ORIGIN/lib'")
-file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/ARMO/*.hpp, ${PROJECT_SOURCE_DIR}/ARMO/*.h)
-file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
+file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/Algorithms/*.hpp, ${PROJECT_SOURCE_DIR}/Algorithms/*.h)
+file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/Algorithms/*.cpp)
 
 
 #if (NOT Matplot)
@@ -29,29 +27,23 @@ file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
 #endif()
 
 
-# Find Gravity (REQUIRED)
-option(Gravity "Link to Gravity libraries" ON)
+# Download Gravity (REQUIRED)
 
-if (Gravity)
-    message(STATUS "Enable Gravity")
-    add_definitions(-DUSE_GRAVITY)
-    find_package(GRAVITY)
-if (GRAVITY_FOUND)
- include_directories(${GRAVITY_INCLUDE_DIRS})
- set(LIBS ${LIBS} ${GRAVITY_LIBRARIES})
- # add_dependencies(ARMO gravity)
-else(GRAVITY_FOUND)
- set(ADD_GRAVITY TRUE)
- message(STATUS "Could not find Gravity, will download it from https://github.com/coin-or/Gravity.git")
- include(ExternalGRAVITY)
- add_dependencies(ARMO GRAVITY)
- set(GRAVITY_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Install/gravity/lib/libgravity.a) 
-endif()
-endif()
+include(ExternalProject)
+message(STATUS "I will download GRAVITY library from https://github.com/coin-or/Gravity")
+include(ExternalGravity)
+link_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib)
+include_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/include)
+if(APPLE)
+set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.a)
+elseif(UNIX)
+set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.so)
+endif(APPLE)
+set(LIBS ${LIBS} ${GRAVITY_LIBRARY})
 
 
 # Find GUROBI (optional)
-option(Gurobi "Link to GUROBI libraries" ON)
+option(Gurobi "Link to GUROBI libraries" OFF)
 
 if (Gurobi)
     message(STATUS "Enable GUROBI")
@@ -63,18 +55,26 @@ endif()
 
 
 # Find IPOPT (REQUIRED)
-option(Ipopt "Link to IPOPT libraries" ON)
-
-message(STATUS "Enable IPOPT")
-add_definitions(-DUSE_IPOPT)
 find_package(IPOPT QUIET)
 if (IPOPT_FOUND)
  message("-- Found IPOPT: ${IPOPT_INCLUDE_DIRS}")
  include_directories(${IPOPT_INCLUDE_DIRS})
  set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
 else(IPOPT_FOUND)
-message(STATUS "Could not find IPOPT, check that IPOPT_ROOT_DIR=${IPOPT_ROOT_DIR} points to the right path")
-endif()
+# set(ADD_IPOPT TRUE)
+if(APPLE)
+ set(IPOPT_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/build/install/ipopt/build/libipopt.dylib)
+elseif(UNIX)
+    set(IPOPT_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/thirdparty/Ipopt/libipopt.so)
+    message(${IPOPT_LIBRARIES})
+    link_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/thirdparty/Ipopt)
+endif(APPLE) 
+include_directories("${THIRDPARTY_INSTALL_PATH}/Install/Gravity/thirdparty/Ipopt/include/coin-or")
+set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
+endif (IPOPT_FOUND)
+
+
+
 # Find LASlib (REQUIRED)
 option(LASlib "Link to LASlib libraries" ON)
 
@@ -130,13 +130,9 @@ set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fprofile-arcs -lgcov")
 endif()
 
 add_executable(ARMO ${ARMO_SOURCES} ${ARMO_HEADERS})
-
-
-if(ADD_GoICP)
- add_dependencies(ARMO GoICP)
-endif(ADD_GoICP)
-
-
-
 target_link_libraries(ARMO ${LIBS})
 
+add_subdirectory(Algorithms)
+
+#Get user defined configuration including passing project source directory into c++ code
+configure_file(ARMOConfig.h.in ${PROJECT_SOURCE_DIR}/include/ARMOConfig.h)
