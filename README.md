@@ -13,16 +13,20 @@ Before             |  After
 :-------------------------:|:-------------------------:
 ![](https://raw.githubusercontent.com/coin-or/Gravity/Align/data_sets/LiDAR/Cars_before.png)  |  ![](https://raw.githubusercontent.com/coin-or/Gravity/Align/data_sets/LiDAR/Cars_after.png)
 
-Fig1. Boresight alignment on the Car data-set
+Fig1. Boresight alignment on the Car [data-set](datasets)
 
 Before             |  After
 :-------------------------:|:-------------------------:
 ![](https://raw.githubusercontent.com/coin-or/Gravity/Align/data_sets/LiDAR/Tent_before.png)  |  ![](https://raw.githubusercontent.com/coin-or/Gravity/Align/data_sets/LiDAR/Tent_after.png)
 
-Fig2. Boresight alignment on the Tent data-set
+Fig2. Boresight alignment on the Tent [data-set](datasets)
 
 Before             |  After
 :-------------------------:|:-------------------------:
 ![](https://raw.githubusercontent.com/coin-or/Gravity/Align/data_sets/LiDAR/Truck_before.png)  |  ![](https://raw.githubusercontent.com/coin-or/Gravity/Align/data_sets/LiDAR/Truck_after.png)
 
-Fig3. Boresight alignment on the Truck data-set
+Fig3. Boresight alignment on the Truck [data-set](datasets)
+
+Funding was provided by Los Alamos National Laboratory's Directed Research (project number XX9H). Funding for LiDAR data collection was provided by the Next‐Generation Ecosystem Experiments (NGEE Arctic) project, supported by the Office of Biological and Environmental Research in the U.S. DOE Office of Science as well as the Source Physics Experiment (SPE), Defense Nuclear Nonproliferation Research and Development (DNN R\&D), National Nuclear Security Administration.
+
+
