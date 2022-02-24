@@ -20,7 +20,7 @@ set(THIRDPARTY_INSTALL_PATH ${CMAKE_BINARY_DIR}/third_party)
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:'$ORIGIN/lib'")
 file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/Algorithms/*.hpp, ${PROJECT_SOURCE_DIR}/Algorithms/*.h)
 file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/Algorithms/*.cpp)
-
+add_subdirectory(Algorithms)
 
 #if (NOT Matplot)
 #  list(REMOVE_ITEM HEADERS ${PROJECT_INCLUDE_DIR}/matplotlibcpp.h)
@@ -132,7 +132,8 @@ endif()
 add_executable(ARMO ${ARMO_SOURCES} ${ARMO_HEADERS})
 target_link_libraries(ARMO ${LIBS})
 
-add_subdirectory(Algorithms)
+add_test(NAME armo_test COMMAND armo)
+
 
 #Get user defined configuration including passing project source directory into c++ code
 configure_file(ARMOConfig.h.in ${PROJECT_SOURCE_DIR}/include/ARMOConfig.h)
