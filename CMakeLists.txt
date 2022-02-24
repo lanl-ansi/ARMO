@@ -18,9 +18,9 @@ set(THIRDPARTY_INSTALL_PATH ${CMAKE_BINARY_DIR}/third_party)
 
 # the RPATH to be used when installing, but only if it's not a system directory
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:'$ORIGIN/lib'")
-file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/Algorithms/*.hpp, ${PROJECT_SOURCE_DIR}/Algorithms/*.h)
-file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/Algorithms/*.cpp)
-add_subdirectory(Algorithms)
+file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/algos/*.hpp, ${PROJECT_SOURCE_DIR}/algos/*.h)
+file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/algos/*.cpp)
+add_subdirectory(algos)
 
 #if (NOT Matplot)
 #  list(REMOVE_ITEM HEADERS ${PROJECT_INCLUDE_DIR}/matplotlibcpp.h)
