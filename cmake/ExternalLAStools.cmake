@@ -19,7 +19,7 @@ ExternalProject_Add(LASTOOLS
 else()
 ExternalProject_Add(LASTOOLS
     DOWNLOAD_DIR ${THIRDPARTY_INSTALL_PATH}
-    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone ${LASTOOLS_DOWNLOAD_URL} && rm -fr ./Install/LASTOOLS && mv LAStools ./Install/LASTOOLS && cd ./Install/LASTOOLS && make
+    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone ${LASTOOLS_DOWNLOAD_URL} && rm -fr ./Install/LASTOOLS && mkdir Install && mv LAStools ./Install/LASTOOLS && cd ./Install/LASTOOLS && make
     URL ${MP_DOWNLOAD_URL}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${MP_ROOT_DIR}
     CONFIGURE_COMMAND ""
