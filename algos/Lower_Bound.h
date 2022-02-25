@@ -18,7 +18,7 @@
 #include <gravity/matplotlibcpp.h>
 #endif
 #include <queue>
-#include <DataSet.h>
+#include "DataSet.h"
 #include "lasreader.hpp"
 #include "laswriter.hpp"
 #include <algorithm>

@@ -1,0 +1,10 @@
+
+include_directories(${PROJECT_INCLUDE_DIR})
+
+file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/algos/*.hpp, ${PROJECT_SOURCE_DIR}/algos/*.h)
+file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/algos/*.cpp)
+add_executable(armo ${ARMO_SOURCES} ${ARMO_HEADERS})
+target_link_libraries(armo ${LIBS})
+
+add_test(NAME armo_test COMMAND armo)
+

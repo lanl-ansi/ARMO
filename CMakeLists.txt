@@ -18,9 +18,6 @@ set(THIRDPARTY_INSTALL_PATH ${CMAKE_BINARY_DIR}/third_party)
 
 # the RPATH to be used when installing, but only if it's not a system directory
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:'$ORIGIN/lib'")
-file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/algos/*.hpp, ${PROJECT_SOURCE_DIR}/algos/*.h)
-file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/algos/*.cpp)
-add_subdirectory(algos)
 
 #if (NOT Matplot)
 #  list(REMOVE_ITEM HEADERS ${PROJECT_INCLUDE_DIR}/matplotlibcpp.h)
@@ -32,16 +29,15 @@ add_subdirectory(algos)
 include(ExternalProject)
 message(STATUS "I will download GRAVITY library from https://github.com/coin-or/Gravity")
 include(ExternalGravity)
+set(GRAVITY_INCLUDE_DIRS ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/include)
+include_directories(${GRAVITY_INCLUDE_DIRS})
 link_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib)
-include_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/include)
 if(APPLE)
 set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.a)
 elseif(UNIX)
 set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.so)
 endif(APPLE)
 set(LIBS ${LIBS} ${GRAVITY_LIBRARY})
-
-
 # Find GUROBI (optional)
 option(Gurobi "Link to GUROBI libraries" OFF)
 
@@ -76,23 +72,12 @@ endif (IPOPT_FOUND)
 
 
 # Find LASlib (REQUIRED)
-option(LASlib "Link to LASlib libraries" ON)
+include(ExternalLAStools)
 
-message(STATUS "Enable LASlib")
-add_definitions(-DUSE_LASlib)
-find_package(LASlib QUIET)
-if (LASlib_FOUND)
- message("-- Found LASlib: ${LASlib_INCLUDE_DIRS}")
- include_directories(${LASlib_INCLUDE_DIRS})
- set(LIBS ${LIBS} ${LASlib_LIBRARIES})
-else(LASlib_FOUND)
-message(STATUS "Could not find IPOPT, check that LASlib_ROOT_DIR=${LASlib_ROOT_DIR} points to the right path")
-endif()
-# Find VORO (REQUIRED)
-option(VORO "Link to VORO libraries" ON)
+# Find VORO (Optional)
+option(VORO "Link to VORO libraries" OFF)
 message(STATUS "Enable VORO")
 add_definitions(-DUSE_VORO)
-find_package(VORO QUIET)
 if (VORO_FOUND)
  message("-- Found VORO: ${VORO_INCLUDE_DIRS}")
  include_directories(${VORO_INCLUDE_DIRS})
@@ -129,11 +114,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fprofile-arcs -lgcov")
 endif()
 
-add_executable(ARMO ${ARMO_SOURCES} ${ARMO_HEADERS})
-target_link_libraries(ARMO ${LIBS})
 
-add_test(NAME armo_test COMMAND armo)
-
+add_subdirectory(algos)
 
 #Get user defined configuration including passing project source directory into c++ code
 configure_file(ARMOConfig.h.in ${PROJECT_SOURCE_DIR}/include/ARMOConfig.h)

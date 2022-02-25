@@ -39,7 +39,7 @@ ${GRAVITY_ROOT_DIR}/libgfortran-5.dll ${PROJECT_SOURCE_DIR}/bin/Release/libgfort
 else()
 ExternalProject_Add(gravity
     DOWNLOAD_DIR ${THIRDPARTY_INSTALL_PATH}
-    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b ACOPF --single-branch ${GRAVITY_DOWNLOAD_URL} && rm -fr ./Install/Gravity && mv Gravity ./Install/Gravity && cd ./Install/Gravity && mkdir build && cd build && cmake -DMP=OFF -DCMAKE_CXX_FLAGS="-Wno-non-pod-varargs" .. && make gravity
+    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b Align --single-branch ${GRAVITY_DOWNLOAD_URL} && rm -fr ./Install/Gravity && mkdir Install && mv Gravity ./Install/Gravity && cd ./Install/Gravity && mkdir build && cd build && cmake -DMP=OFF -DCMAKE_CXX_FLAGS="-Wno-non-pod-varargs" .. && make gravity
     URL ${MP_DOWNLOAD_URL}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${MP_ROOT_DIR}
     CONFIGURE_COMMAND ""
@@ -47,12 +47,17 @@ ExternalProject_Add(gravity
     INSTALL_COMMAND ""
 )
 endif()
-
-list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-DGRAVITY_ROOT_DIR:PATH=${GRAVITY_ROOT_DIR}")
 set(GRAVITY_INCLUDE_DIRS ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/include)
 include_directories(${GRAVITY_INCLUDE_DIRS})
-find_library(GRAVITY_LIBRARY
-        libgravity.a
-        HINTS ${GRAVITY_ROOT_DIR}/build/lib
-)
+link_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib)
+if(APPLE)
+set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.a)
+elseif(UNIX)
+set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.so)
+endif(APPLE)
 set(LIBS ${LIBS} ${GRAVITY_LIBRARY})
+
+list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-DGRAVITY_ROOT_DIR:PATH=${GRAVITY_ROOT_DIR}")
+
+
+
