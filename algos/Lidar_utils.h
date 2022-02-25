@@ -1266,8 +1266,8 @@ vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lid
         }
         
         DebugOn("Read " << LidarPoints.size() << " points" << endl);
-        DebugOn(point_cloud1.size() << " points in flight line 1" << endl);
-        DebugOn(point_cloud2.size() << " points in flight line 2" << endl);
+        DebugOff(point_cloud1.size() << " points in flight line 1" << endl);
+        DebugOff(point_cloud2.size() << " points in flight line 2" << endl);
         vector<vector<double>> empty_vec;
         empty_vec.push_back(uav_cloud[0]);
 #ifdef USE_MATPLOT
@@ -1279,11 +1279,11 @@ vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lid
          plot(lidar_point_cloud,empty_vec, 0.1);
 #endif
         save_laz(name, point_cloud1, point_cloud2);
-        DebugOn("time_start "<<time_start);
-        DebugOn("time_end "<<time_end-time_start);
+        DebugOff("time_start "<<time_start);
+        DebugOff("time_end "<<time_end-time_start);
 
     }
-    DebugOn("finished read laz"<<endl);
+    DebugOff("finished read laz"<<endl);
 
     return uav_cloud;
 }

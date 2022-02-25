@@ -245,7 +245,7 @@ vector<double> ub_heuristic_disc(vector<vector<double>>& point_cloud_model, vect
     roll_bounds_r={roll_min, roll_max};
     pitch_bounds_r={pitch_min, pitch_max};
     yaw_bounds_r={yaw_min, yaw_max};
-    
+    DebugOn("Running aGS for "<<max_time<<" seconds"<<endl);
     double ts=get_wall_time();
     
     int ndisc=30;
