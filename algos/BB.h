@@ -318,8 +318,8 @@ vector<double> ub_heuristic_disc(vector<vector<double>>& point_cloud_model, vect
 #ifdef USE_MPI
     if(worker_id==0){
 #endif
-        DebugOn("final time "<<(get_wall_time()-ts)<<endl);
-        DebugOn("final ub "<<best_ub<<endl);
+        DebugOn("Final time "<<(get_wall_time()-ts)<<endl);
+        DebugOn("Final ub "<<best_ub<<endl);
         DebugOn("roll rad "<< rpy[0]<<endl);
         DebugOn("pitch rad "<< rpy[1]<<endl);
         DebugOn("yaw rad "<< rpy[2]<<endl);
