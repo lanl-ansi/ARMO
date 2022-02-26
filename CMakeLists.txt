@@ -39,7 +39,7 @@ link_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib)
 set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Gravity/lib/libgravity.a)
 # elseif(UNIX)
 # set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Gravity/lib/libgravity.so)
-endif(APPLE)
+# endif(APPLE)
 set(LIBS ${LIBS} ${GRAVITY_LIBRARY})
 
 if (Gurobi)
