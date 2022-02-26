@@ -31,7 +31,10 @@ Fig3. Boresight alignment on the Truck [data-set](datasets)
 
 Currently tested on MacOS and Linux, upcoming support for Windows.
 
-Simply run `cmake` then `make`.
+ARMO's only dependency is Cmake.
+Download and install it from here: http://www.cmake.org (Version 3.2 or better)
+
+Then , simply run `cd ARMO`, `cmake` and then `make`.
 
 <H3> CMAKE OPTIONS </H3>
 
@@ -76,10 +79,11 @@ The first argument is the .laz file name.
 
 The second argument is the algorithm: `aGS`(default) for aGS algorithm, `nsBB`, for nsBB, `gurobi` to solve the boresight MIQCQP with Gurobi.
 
-The third argument is the time limit for aGS.
+The third argument is the time limit for `aGS`.
 
 
 <H2> FUNDING </H2>
+
 Funding was provided by Los Alamos National Laboratory's Directed Research (project number XX9H). Funding for LiDAR data collection was provided by the Next‐Generation Ecosystem Experiments (NGEE Arctic) project, supported by the Office of Biological and Environmental Research in the U.S. DOE Office of Science as well as the Source Physics Experiment (SPE), Defense Nuclear Nonproliferation Research and Development (DNN R\&D), National Nuclear Security Administration.
 
 
