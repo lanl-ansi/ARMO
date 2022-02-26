@@ -73,7 +73,7 @@ elseif(WIN32)
 endif(APPLE)
 set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
 endif (IPOPT_FOUND)
-endif (IPOPT)
+endif (Ipopt)
 
 
 
