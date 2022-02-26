@@ -28,7 +28,7 @@
 #include <thread>
 #include "Lidar_utils.h"
 #include <gravity/solver.h>
-#include <ARMOConfig.h>
+#include "ARMOConfig.h"
 #include "BB.h"
 #include "Lower_Bound.h"
 
