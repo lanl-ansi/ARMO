@@ -36,11 +36,7 @@ endif()
 
 
 set(LASLIB_INCLUDE_DIRS ${THIRDPARTY_INSTALL_PATH}/LAStools/LASlib/inc ${THIRDPARTY_INSTALL_PATH}/LAStools/LASzip/src)
-if(APPLE)
 set(LASLIB_LIBRARY ${THIRDPARTY_INSTALL_PATH}/LAStools/LASlib/lib/liblas.a)
-elseif(UNIX)
-set(LASLIB_LIBRARY ${THIRDPARTY_INSTALL_PATH}/LAStools/LASlib/lib/liblas.so)
-endif(APPLE)
 include_directories(${LASLIB_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${LASLIB_LIBRARY})
 
