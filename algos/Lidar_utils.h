@@ -1138,7 +1138,7 @@ void save_laz(const string& fname, const vector<vector<double>>& point_cloud1, c
 }
 /* Read Laz files */
 vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lidar_point_cloud, vector<vector<double>>& roll_pitch_yaw){
-    string namef= fname.substr(0,fname.find('.'));
+    string namef= fname.substr(0,fname.find(".laz"));
     string name=namef+"_original.laz";
     LASreadOpener lasreadopener;
     lasreadopener.set_file_name(fname.c_str());
@@ -1163,29 +1163,29 @@ vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lid
             throw invalid_argument("ERROR: could not open lasreader\n");
         }
         
-        DebugOn("Number of points = " << lasreader->npoints << endl);
+        DebugOff("Number of points = " << lasreader->npoints << endl);
         DebugOn("min x axis = " << lasreader->header.min_x << endl);
         DebugOn("max x axis = " << lasreader->header.max_x << endl);
         DebugOn("min y axis = " << lasreader->header.min_y << endl);
         DebugOn("max y axis = " << lasreader->header.max_y << endl);
         DebugOn("min z axis = " << lasreader->header.min_z << endl);
         DebugOn("max z axis = " << lasreader->header.max_z << endl);
-        DebugOn("xscale = "<<lasreader->header.x_scale_factor<<endl);
-        DebugOn("yscale = "<<lasreader->header.y_scale_factor<<endl);
-        DebugOn("zscale = "<<lasreader->header.z_scale_factor<<endl);
-        DebugOn("xoffset = "<<lasreader->header.x_offset<<endl);
-        DebugOn("yoffset = "<<lasreader->header.y_offset<<endl);
-        DebugOn("zoffset = "<<lasreader->header.z_offset<<endl);
+        DebugOff("xscale = "<<lasreader->header.x_scale_factor<<endl);
+        DebugOff("yscale = "<<lasreader->header.y_scale_factor<<endl);
+        DebugOff("zscale = "<<lasreader->header.z_scale_factor<<endl);
+        DebugOff("xoffset = "<<lasreader->header.x_offset<<endl);
+        DebugOff("yoffset = "<<lasreader->header.y_offset<<endl);
+        DebugOff("zoffset = "<<lasreader->header.z_offset<<endl);
        
         
         int total_pts=lasreader->npoints;
         int skip=1;
-        if(total_pts>=15e6 && total_pts<=1e8){
-            skip=10;
-        }
-        else if(total_pts>1e8){
-            skip=1000;
-        }
+//        if(total_pts>=15e6 && total_pts<=1e8){
+//            skip=10;
+//        }
+//        else if(total_pts>1e8){
+//            skip=1000;
+//        }
         int nb_dots; /* Number of measurements inside cell */
         int xpos, ypos;
         double z, min_z, max_z, av_z;
@@ -1223,7 +1223,7 @@ vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lid
         
         lasreader->read_point();
         auto time_start = lasreader->point.get_gps_time();
-        DebugOn("time_start "<<time_start<<endl);
+        DebugOff("time_start "<<time_start<<endl);
         while (lasreader->read_point() && LidarPoints.size()!=200e6)
         {
             nb_pts++;
@@ -1266,8 +1266,8 @@ vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lid
         }
         
         DebugOn("Read " << LidarPoints.size() << " points" << endl);
-        DebugOn(point_cloud1.size() << " points in flight line 1" << endl);
-        DebugOn(point_cloud2.size() << " points in flight line 2" << endl);
+        DebugOff(point_cloud1.size() << " points in flight line 1" << endl);
+        DebugOff(point_cloud2.size() << " points in flight line 2" << endl);
         vector<vector<double>> empty_vec;
         empty_vec.push_back(uav_cloud[0]);
 #ifdef USE_MATPLOT
@@ -1279,11 +1279,11 @@ vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lid
          plot(lidar_point_cloud,empty_vec, 0.1);
 #endif
         save_laz(name, point_cloud1, point_cloud2);
-        DebugOn("time_start "<<time_start);
-        DebugOn("time_end "<<time_end-time_start);
+        DebugOff("time_start "<<time_start);
+        DebugOff("time_end "<<time_end-time_start);
 
     }
-    DebugOn("finished read laz"<<endl);
+    DebugOff("finished read laz"<<endl);
 
     return uav_cloud;
 }

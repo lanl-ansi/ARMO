@@ -40,7 +40,7 @@ else()
 message(STATUS "VALUE of Gurobi is: ${Gurobi}")
 ExternalProject_Add(gravity
     DOWNLOAD_DIR ${THIRDPARTY_INSTALL_PATH}
-    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b Align --single-branch ${GRAVITY_DOWNLOAD_URL} && rm -fr ./Install/Gravity && mkdir Install && mv Gravity ./Install/Gravity && cd ./Install/Gravity && mkdir build && cd build && cmake .. -DGurobi=${Gurobi} && make gravity
+    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b Align --single-branch ${GRAVITY_DOWNLOAD_URL} && rm -fr ./Install/Gravity && mv Gravity ./Install/Gravity && cd ./Install/Gravity && mkdir build && cd build && cmake .. -DGurobi=${Gurobi} && make gravity
     URL ${MP_DOWNLOAD_URL}
     CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
     CONFIGURE_COMMAND ""

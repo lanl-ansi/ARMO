@@ -60,29 +60,18 @@ int main (int argc, char * argv[])
     auto err_rank = MPI_Comm_rank(MPI_COMM_WORLD, &worker_id);
     auto err_size = MPI_Comm_size(MPI_COMM_WORLD, &nb_workers);
 #endif
+    string file_u= "./datasets/Truck.adc.laz";
     /*Scanner offset*/
     double scanner_x=0.0, scanner_y=0.160999998450279, scanner_z=0.016;
-    /*"hidden" calibration applied by LiDAR viewer given in .json.lvp file*/
-    /*Car set*/
-    //const double hr=0, hp=0.0, hy=0.0;
+    /*"hidden" calibration applied by LiDAR viewer given in .json file*/
     /*Truck set*/
-    const double hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
-    /*Tent set*
-     const double hr=0, hp=0.0, hy=0.0;
-     */
+    double hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
     /*to select overlapping regions of the object*/
-    /*For car set*/
-    //const double xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
-    /* *Truck set*/
-    const double xm=0, ym=0,zm=1262.5,xd=0,yd=0,zd=1261.1;
-    /*Tent set*
-     const double xm=0, ym=0,zm=124,xd=0,yd=0,zd=124.2;
-     */
+    /*Truck set*/
+    double xm=0, ym=0,zm=1262.5,xd=0,yd=0,zd=1261.1;
     /*to downsample points*/
-    //int mskip=1,dskip=4;//Car set
-    int mskip =1, dskip =2;//Truck set
-    //int mskip=2, dskip =3;// ,Tent set
-    string file_u= string(prj_dir)+"/data_sets/LiDAR/Truck.adc.laz";
+    /*Truck set*/
+    int mskip =1, dskip =2;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
     /*Algorithm Choices
@@ -102,6 +91,27 @@ int main (int argc, char * argv[])
         bore_roll= std::stod(argv[2]);
         bore_pitch= std::stod(argv[3]);
         bore_yaw= std::stod(argv[4]);
+    }
+    if(file_u.find("datasets/Truck.adc.laz")!=std::string::npos){
+        DebugOn("Truck data set selected"<<endl);
+    }
+    else if(file_u.find("datasets/Car.adc.laz")!=std::string::npos){
+        hr=0;hp=0;hy=0;
+        xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
+        mskip=1,dskip=4;
+        DebugOn("Car data set selected"<<endl);
+    }
+    else if(file_u.find("datasets/Tent.adc.laz")!=std::string::npos){
+        hr=0;hp=0;hy=0;
+        xm=0; ym=0;zm=124;xd=0;yd=0;zd=124.2;
+        mskip=2;dskip=3;
+        DebugOn("Tent data set selected"<<endl);
+    }
+    else{
+        DebugOn("WARNING: New data set!!!"<<endl<<"Before continuing "<<endl);
+        DebugOn("Check if values of hidden calibration values are updated"<<endl);
+        DebugOn("Check if values of xm,ym,zm,xd,yd,zd are updated"<<endl);
+        DebugOn("Check if values of mskip and dskip are updated"<<endl);
     }
     string error_type="L2";
     vector<double> best_rot(9,0.0);
@@ -128,7 +138,7 @@ int main (int argc, char * argv[])
             auto y_prev=uav_cloud_u.at(i-1)[1];
             auto z_prev=uav_cloud_u.at(i-1)[2];
             if(abs(x-x_prev)>=1 || abs(y-y_prev)>=1 || abs(z-z_prev)>=1){
-                DebugOn("found i "<<i<<endl);
+                DebugOn("Two flight lines are detected"<<endl);
                 mid_i=i;
             }
         }
@@ -197,8 +207,8 @@ int main (int argc, char * argv[])
                 rpy_data1.push_back(full_rpy_data.at(i));
             }
         }
-        DebugOn(point_cloud_model1.size()<<endl);
-        DebugOn(point_cloud_data1.size()<<endl);
+        DebugOff(point_cloud_model1.size()<<endl);
+        DebugOff(point_cloud_data1.size()<<endl);
 #ifdef USE_MATPLOT
         plot(point_cloud_model1, point_cloud_data1);
         plot(uav_model1,uav_data1);
@@ -217,8 +227,8 @@ int main (int argc, char * argv[])
             rpy_data.push_back(rpy_data1.at(i));
             
         }
-        save_laz(file_u.substr(0,file_u.find('.'))+"_model.laz", point_cloud_model, em);
-        save_laz(file_u.substr(0,file_u.find('.'))+"_data.laz", point_cloud_data, em);
+        save_laz(file_u.substr(0,file_u.find(".laz"))+"_model.laz", point_cloud_model, em);
+        save_laz(file_u.substr(0,file_u.find(".laz"))+"_data.laz", point_cloud_data, em);
         bool scale=true;
         if(scale){
             for(auto i=0;i<point_cloud_model.size();i++){
@@ -242,8 +252,8 @@ int main (int argc, char * argv[])
                 uav_data.at(i)[2]-=uav_cloud_u.at(0)[2];
             }
         }
-        DebugOn(point_cloud_model.size()<<endl);
-        DebugOn(point_cloud_data.size()<<endl);
+        DebugOn("Size of set bar P "<<point_cloud_model.size()<<endl);
+        DebugOn("Size of set hat P "<<point_cloud_data.size()<<endl);
        
         double roll_min=-2*pi/180;
         double roll_max=2*pi/180;
@@ -263,8 +273,8 @@ int main (int argc, char * argv[])
 #ifdef USE_MPI
         if(worker_id==0){
 #endif            
-            DebugOn("L2init  "<<L2init<<endl);
-            DebugOn("L1init  "<<L1init<<endl);
+            DebugOn("L2 Initial  "<<L2init<<endl);
+            DebugOn("L1 Initial  "<<L1init<<endl);
 #ifdef USE_MPI
         }
 #endif
@@ -317,10 +327,10 @@ int main (int argc, char * argv[])
             
             apply_transform_new_order(roll_deg_bb*pi/180, pitch_deg_bb*pi/180, yaw_deg_bb*pi/180, point_cloud_model, uav_model, rpy_model, scanner_x,scanner_y,scanner_z,hr,hp,hy);
             apply_transform_new_order(roll_deg_bb*pi/180, pitch_deg_bb*pi/180, yaw_deg_bb*pi/180, point_cloud_data, uav_data, rpy_data, scanner_x,scanner_y,scanner_z,hr,hp,hy);
-            save_laz(file_u.substr(0,file_u.find('.'))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_hatp.laz", point_cloud_data, em);
-            save_laz(file_u.substr(0,file_u.find('.'))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_barp.laz", point_cloud_model, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_hatp.laz", point_cloud_data, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_barp.laz", point_cloud_model, em);
             apply_transform_new_order(roll_deg_bb*pi/180, pitch_deg_bb*pi/180, yaw_deg_bb*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x,scanner_y,scanner_z,hr,hp,hy);
-            save_laz(file_u.substr(0,file_u.find('.'))+"_"+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+".laz", lidar_point_cloud, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+"_"+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+".laz", lidar_point_cloud, em);
             
             auto L2=computeL2error(point_cloud_model,point_cloud_data,matching,err_per_point);
             auto L1=computeL1error(point_cloud_model,point_cloud_data,matching,err_per_point);
@@ -343,9 +353,9 @@ int main (int argc, char * argv[])
             apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, point_cloud_model, uav_model, rpy_model, scanner_x,scanner_y,scanner_z,hr,hp,hy);
             apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, point_cloud_data, uav_data, rpy_data, scanner_x,scanner_y,scanner_z,hr,hp,hy);
             apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
-            save_laz(file_u.substr(0,file_u.find('.'))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_hatp.laz", point_cloud_data, em);
-            save_laz(file_u.substr(0,file_u.find('.'))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_barp.laz", point_cloud_model, em);
-            save_laz(file_u.substr(0,file_u.find('.'))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_hatp.laz", point_cloud_data, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_barp.laz", point_cloud_model, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
             auto L2=computeL2error(point_cloud_model,point_cloud_data,matching,err_per_point);
             auto L1=computeL1error(point_cloud_model,point_cloud_data,matching,err_per_point);
 #ifdef USE_MPI
@@ -364,7 +374,7 @@ int main (int argc, char * argv[])
     else{/*Apply the calibration values on large data set D=\hat{D} union \bar{D}*/
         
         apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
-        save_laz(file_u.substr(0,file_u.find('.'))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
+        save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
     }
 #ifdef USE_MATPLOT
     plot(point_cloud_model, point_cloud_data);
