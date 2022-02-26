@@ -24,9 +24,12 @@ set(THIRDPARTY_INSTALL_PATH ${CMAKE_BINARY_DIR}/third_party)
 #endif()
 
 
-# Download Gravity (REQUIRED)
+
+# Find GUROBI (optional)
+option(Gurobi "Link to GUROBI libraries" OFF)
 
 include(ExternalProject)
+# Download Gravity (REQUIRED)
 message(STATUS "I will download GRAVITY library from https://github.com/coin-or/Gravity")
 include(ExternalGravity)
 set(GRAVITY_INCLUDE_DIRS ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/include)
@@ -38,8 +41,6 @@ elseif(UNIX)
 set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.so)
 endif(APPLE)
 set(LIBS ${LIBS} ${GRAVITY_LIBRARY})
-# Find GUROBI (optional)
-option(Gurobi "Link to GUROBI libraries" OFF)
 
 if (Gurobi)
     message(STATUS "Enable GUROBI")
