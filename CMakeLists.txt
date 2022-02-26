@@ -23,7 +23,8 @@ set(THIRDPARTY_INSTALL_PATH ${CMAKE_BINARY_DIR}/third_party)
 #  list(REMOVE_ITEM HEADERS ${PROJECT_INCLUDE_DIR}/matplotlibcpp.h)
 #endif()
 
-
+# Find IPOPT (optional)
+option(Ipopt "Link to IPOPT libraries" OFF)
 
 # Find GUROBI (optional)
 option(Gurobi "Link to GUROBI libraries" OFF)
@@ -52,23 +53,27 @@ endif()
 
 
 # Find IPOPT (REQUIRED)
+if (Ipopt)
+message(STATUS "Enable IPOPT")
+add_definitions(-DUSE_IPOPT)
 find_package(IPOPT QUIET)
 if (IPOPT_FOUND)
  message("-- Found IPOPT: ${IPOPT_INCLUDE_DIRS}")
  include_directories(${IPOPT_INCLUDE_DIRS})
  set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
 else(IPOPT_FOUND)
+ set(IPOPT_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/thirdparty/Ipopt/include/coin)
 # set(ADD_IPOPT TRUE)
 if(APPLE)
- set(IPOPT_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Gravity/build/install/ipopt/build/libipopt.dylib)
+ set(IPOPT_LIBRARIES ${PROJECT_SOURCE_DIR}/thirdparty/Ipopt/lib/libipopt.dylib)
 elseif(UNIX)
-    set(IPOPT_LIBRARIES ${THIRDPARTY_INSTALL_PATH}/Gravity/thirdparty/Ipopt/libipopt.so)
-    message(${IPOPT_LIBRARIES})
-    link_directories(${THIRDPARTY_INSTALL_PATH}/Gravity/thirdparty/Ipopt)
-endif(APPLE) 
-include_directories("${THIRDPARTY_INSTALL_PATH}/Gravity/thirdparty/Ipopt/include/coin-or")
+ set(IPOPT_LIBRARIES ${PROJECT_SOURCE_DIR}/thirdparty/Ipopt/libipopt.so)
+elseif(WIN32) 
+ set(IPOPT_LIBRARIES ${PROJECT_SOURCE_DIR}/thirdparty/Ipopt/libipopt-3.lib)
+endif(APPLE)
 set(LIBS ${LIBS} ${IPOPT_LIBRARIES})
 endif (IPOPT_FOUND)
+endif (IPOPT)
 
 
 
