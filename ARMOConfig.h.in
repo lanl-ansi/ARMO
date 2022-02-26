@@ -1,1 +1,1 @@
-#define prj_dir "@PROJECT_SOURCE_DIR@"
+#define armo_dir "@PROJECT_SOURCE_DIR@"

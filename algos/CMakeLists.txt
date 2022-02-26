@@ -5,6 +5,6 @@ file(GLOB ARMO_HEADERS ${PROJECT_SOURCE_DIR}/algos/*.hpp, ${PROJECT_SOURCE_DIR}/
 file(GLOB ARMO_SOURCES ${PROJECT_SOURCE_DIR}/algos/*.cpp)
 add_executable(armo ${ARMO_SOURCES} ${ARMO_HEADERS})
 target_link_libraries(armo ${LIBS})
-
+ADD_DEPENDENCIES(armo gravity LASTOOLS)
 add_test(NAME armo_test COMMAND armo)
 

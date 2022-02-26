@@ -1,3 +1,9 @@
+if(CMAKE_XCODE_BUILD_SYSTEM VERSION_GREATER_EQUAL 12)
+  cmake_policy(SET CMP0114 NEW)
+else()
+  cmake_policy(SET CMP0114 OLD)
+endif()
+
 # Create download URL derived from version number.
 set(GRAVITY_DOWNLOAD_URL https://github.com/coin-or/Gravity.git)
 
@@ -40,7 +46,7 @@ else()
 message(STATUS "VALUE of Gurobi is: ${Gurobi}")
 ExternalProject_Add(gravity
     DOWNLOAD_DIR ${THIRDPARTY_INSTALL_PATH}
-    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b Align --single-branch ${GRAVITY_DOWNLOAD_URL} && rm -fr ./Install/Gravity && mv Gravity ./Install/Gravity && cd ./Install/Gravity && mkdir build && cd build && cmake .. -DGurobi=${Gurobi} && make gravity
+    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b Align --single-branch ${GRAVITY_DOWNLOAD_URL} && cd ./Gravity && mkdir build && cd build && cmake .. -DGurobi=${Gurobi} && make gravity
     URL ${MP_DOWNLOAD_URL}
     CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
     CONFIGURE_COMMAND ""
@@ -48,13 +54,13 @@ ExternalProject_Add(gravity
     INSTALL_COMMAND ""
 )
 endif()
-set(GRAVITY_INCLUDE_DIRS ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/include)
+set(GRAVITY_INCLUDE_DIRS ${THIRDPARTY_INSTALL_PATH}/Gravity/include)
 include_directories(${GRAVITY_INCLUDE_DIRS})
-link_directories(${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib)
+link_directories(${THIRDPARTY_INSTALL_PATH}/Gravity/lib)
 if(APPLE)
-set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.a)
+set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Gravity/lib/libgravity.a)
 elseif(UNIX)
-set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Install/Gravity/lib/libgravity.so)
+set(GRAVITY_LIBRARY ${THIRDPARTY_INSTALL_PATH}/Gravity/lib/libgravity.so)
 endif(APPLE)
 set(LIBS ${LIBS} ${GRAVITY_LIBRARY})
 

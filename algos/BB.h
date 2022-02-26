@@ -192,9 +192,9 @@ vector<double> ub_heuristic(vector<vector<double>>& point_cloud_model, vector<ve
 #ifdef USE_MPI
     if(worker_id==0){
 #endif
-        DebugOn("roll rad "<< roll_rad<<endl);
-        DebugOn("pitch rad "<< pitch_rad<<endl);
-        DebugOn("yaw rad "<< yaw_rad<<endl);
+        DebugOff("roll rad "<< roll_rad<<endl);
+        DebugOff("pitch rad "<< pitch_rad<<endl);
+        DebugOff("yaw rad "<< yaw_rad<<endl);
 #ifdef USE_MPI
     }
 #endif
@@ -206,7 +206,7 @@ vector<double> ub_heuristic(vector<vector<double>>& point_cloud_model, vector<ve
     
 }
 
-vector<double> ub_heuristic_disc(vector<vector<double>>& point_cloud_model, vector<vector<double>>& point_cloud_data, vector<vector<double>>& uav_model, vector<vector<double>>& uav_data, vector<vector<double>>& rpy_model, vector<vector<double>>& rpy_data, vector<double>& best_rot_trans, double& best_ub, std::string error_type, const double scanner_x, const double scanner_y,const double scanner_z, const double hr, const double hp,const double hy)
+vector<double> ub_heuristic_disc(vector<vector<double>>& point_cloud_model, vector<vector<double>>& point_cloud_data, vector<vector<double>>& uav_model, vector<vector<double>>& uav_data, vector<vector<double>>& rpy_model, vector<vector<double>>& rpy_data, vector<double>& best_rot_trans, double& best_ub, std::string error_type, const double scanner_x, const double scanner_y,const double scanner_z, const double hr, const double hp,const double hy, double max_time=100)
 {
 #ifdef USE_MPI
     int worker_id, nb_workers;
@@ -217,7 +217,6 @@ vector<double> ub_heuristic_disc(vector<vector<double>>& point_cloud_model, vect
     /* INPUT BOUNDS */
     
     /* INPUT BOUNDS */
-    double max_time=100;
     double prep_time_total=0;
     
     double yaw_min = -2*pi/180., yaw_max = 2*pi/180., pitch_min =-2*pi/180.,pitch_max = 2*pi/180.,roll_min =-2*pi/180.,roll_max = 2*pi/180.;
@@ -319,10 +318,12 @@ vector<double> ub_heuristic_disc(vector<vector<double>>& point_cloud_model, vect
     if(worker_id==0){
 #endif
         DebugOn("Final time "<<(get_wall_time()-ts)<<endl);
-        DebugOn("Final ub "<<best_ub<<endl);
-        DebugOn("roll rad "<< rpy[0]<<endl);
-        DebugOn("pitch rad "<< rpy[1]<<endl);
-        DebugOn("yaw rad "<< rpy[2]<<endl);
+        DebugOn("\n*************************\n");
+        DebugOn("L2 Final "<<best_ub<<endl);
+        DebugOn("*************************\n");
+        DebugOff("roll rad "<< rpy[0]<<endl);
+        DebugOff("pitch rad "<< rpy[1]<<endl);
+        DebugOff("yaw rad "<< rpy[2]<<endl);
 #ifdef USE_MPI
     }
 #endif

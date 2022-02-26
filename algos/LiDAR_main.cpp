@@ -28,6 +28,7 @@
 #include <thread>
 #include "Lidar_utils.h"
 #include <gravity/solver.h>
+#include <ARMOConfig.h>
 #include "BB.h"
 #include "Lower_Bound.h"
 
@@ -54,13 +55,21 @@ void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>&
 
 int main (int argc, char * argv[])
 {
+    DebugOn("\n********************************************************************************\n");
+    DebugOn("********************************  ARMO  ****************************************\n");
+    DebugOn("********************************************************************************\n");
+    DebugOn("This program uses Gravity and LasLib and is released as open-source code under\n");
+    DebugOn("the BSD-3 License. For more information visit https://github.com/lanl-ansi/ARMO\n");
+    DebugOn("********************************************************************************\n");
+    DebugOn("********************************************************************************\n");
+    DebugOn("********************************************************************************\n\n");
 #ifdef USE_MPI
     auto err_init = MPI_Init(nullptr,nullptr);
     int worker_id, nb_workers;
     auto err_rank = MPI_Comm_rank(MPI_COMM_WORLD, &worker_id);
     auto err_size = MPI_Comm_size(MPI_COMM_WORLD, &nb_workers);
 #endif
-    string file_u= "./datasets/Truck.adc.laz";
+    string file_u= string(armo_dir)+"/datasets/Truck.adc.laz";
     /*Scanner offset*/
     double scanner_x=0.0, scanner_y=0.160999998450279, scanner_z=0.016;
     /*"hidden" calibration applied by LiDAR viewer given in .json file*/
@@ -72,6 +81,7 @@ int main (int argc, char * argv[])
     /*to downsample points*/
     /*Truck set*/
     int mskip =1, dskip =2;
+    double max_time = 100;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
     /*Algorithm Choices
@@ -83,25 +93,28 @@ int main (int argc, char * argv[])
     if(argc>=2){
         file_u = argv[1];
     }
-    if(argc==3){
+    if(argc>=3){
         algo = argv[2];
     }
-    if(argc==5){
+    if(argc==4){
+        max_time = std::stod(argv[3]);
+    }
+    if(argc>=5){
         algo="apply_angles";
         bore_roll= std::stod(argv[2]);
         bore_pitch= std::stod(argv[3]);
         bore_yaw= std::stod(argv[4]);
     }
-    if(file_u.find("datasets/Truck.adc.laz")!=std::string::npos){
+    if(file_u.find(string(armo_dir)+"/datasets/Truck.adc.laz")!=std::string::npos){
         DebugOn("Truck data set selected"<<endl);
     }
-    else if(file_u.find("datasets/Car.adc.laz")!=std::string::npos){
+    else if(file_u.find(string(armo_dir)+"/datasets/Car.adc.laz")!=std::string::npos){
         hr=0;hp=0;hy=0;
         xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
         mskip=1,dskip=4;
         DebugOn("Car data set selected"<<endl);
     }
-    else if(file_u.find("datasets/Tent.adc.laz")!=std::string::npos){
+    else if(file_u.find(string(armo_dir)+"/datasets/Tent.adc.laz")!=std::string::npos){
         hr=0;hp=0;hy=0;
         xm=0; ym=0;zm=124;xd=0;yd=0;zd=124.2;
         mskip=2;dskip=3;
@@ -272,9 +285,11 @@ int main (int argc, char * argv[])
         L1init=computeL1error(point_cloud_model_copy,point_cloud_data_copy,matching,err_per_point);
 #ifdef USE_MPI
         if(worker_id==0){
-#endif            
+#endif
+            DebugOn("\n*************************\n");
             DebugOn("L2 Initial  "<<L2init<<endl);
             DebugOn("L1 Initial  "<<L1init<<endl);
+            DebugOn("*************************\n");
 #ifdef USE_MPI
         }
 #endif
@@ -286,12 +301,12 @@ int main (int argc, char * argv[])
             best_ub=L1init;
         }
         if(algo=="aGS"){
-            auto rot= ub_heuristic_disc(point_cloud_model, point_cloud_data, uav_model, uav_data, rpy_model, rpy_data, best_rot, best_ub, error_type, scanner_x, scanner_y, scanner_z, hr, hp, hy);
+            auto rot= ub_heuristic_disc(point_cloud_model, point_cloud_data, uav_model, uav_data, rpy_model, rpy_data, best_rot, best_ub, error_type, scanner_x, scanner_y, scanner_z, hr, hp, hy, max_time);
             auto roll_rad_ub = rot[0];
             auto pitch_rad_ub = rot[1];
             auto yaw_rad_ub = rot[2];
-            DebugOn("Angles radians "<<roll_rad_ub<<" "<<pitch_rad_ub<<" "<<yaw_rad_ub<<endl);
-            DebugOn("Angles degrees "<<roll_rad_ub*180/pi<<" "<<pitch_rad_ub*180/pi<<" "<<yaw_rad_ub*180/pi<<endl);
+            DebugOff("Angles radians "<<roll_rad_ub<<" "<<pitch_rad_ub<<" "<<yaw_rad_ub<<endl);
+            DebugOn("Angles (degrees) "<<roll_rad_ub*180/pi<<" "<<pitch_rad_ub*180/pi<<" "<<yaw_rad_ub*180/pi<<endl);
             
         }
         else if(algo=="gurobi"){
