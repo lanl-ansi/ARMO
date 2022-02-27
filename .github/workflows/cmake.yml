@@ -59,7 +59,7 @@ jobs:
       shell: cmake -P {0}
       run: |
         set(ninja_version "1.9.0")
-        set(cmake_version "3.16.2")
+        set(cmake_version "3.22.2")
         
         message(STATUS "Using host CMake version: ${CMAKE_VERSION}")
         if ("${{ runner.os }}" STREQUAL "Windows")
