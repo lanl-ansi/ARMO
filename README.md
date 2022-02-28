@@ -1,3 +1,7 @@
+[![License](https://img.shields.io/badge/License-BSD--3-brightgreen.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Github Actions](https://github.com/lanl-ansi/ARMO/actions/workflows/cmake.yml/badge.svg)](https://github.com/lanl-ansi/ARMO/actions/workflows/cmake.yml)
+[![Code Coverage](https://codecov.io/gh/lanl-ansi/ARMO/branch/master/graph/badge.svg)](https://codecov.io/gh/lanl-ansi/ARMO)
+
 <p align="center">
   <a href="https://github.com/hhijazi/ARMO">
     <img src="lidar-icon.png" width="120" alt="ARMO">
