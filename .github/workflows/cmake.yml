@@ -47,7 +47,6 @@ jobs:
       
     - name: Gencov
       shell: bash
-      working-directory: ${{runner.workspace}}/build
       run: ./get_code_cov.sh
       
     - name: Codecov
