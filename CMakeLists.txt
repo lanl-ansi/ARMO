@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.2)
 
 project(ARMO)
 
+enable_testing()
+
 include_directories(${PROJECT_INCLUDE_DIR})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
