@@ -308,7 +308,7 @@ int main (int argc, char * argv[])
             DebugOff("Angles radians "<<roll_rad_ub<<" "<<pitch_rad_ub<<" "<<yaw_rad_ub<<endl);
             DebugOn("Angles (degrees) "<<roll_rad_ub*180/pi<<" "<<pitch_rad_ub*180/pi<<" "<<yaw_rad_ub*180/pi<<endl);
             apply_transform_new_order(roll_rad_ub*pi/180, pitch_rad_ub*pi/180, yaw_rad_ub*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x,scanner_y,scanner_z,hr,hp,hy);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+"_"+to_string(roll_rad_ub*180/pi)+"_"+to_string(pitch_rad_ub*180/pi)+"_"+to_string(yaw_rad_ub*180/pi)+".laz", lidar_point_cloud, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+"_"+to_string(roll_rad_ub*180/pi)+"_"+to_string(pitch_rad_ub*180/pi)+"_"+to_string(yaw_rad_ub*180/pi)+".las", lidar_point_cloud, em);
             
         }
         else if(algo=="gurobi"){
