@@ -105,16 +105,16 @@ int main (int argc, char * argv[])
         bore_pitch= std::stod(argv[3]);
         bore_yaw= std::stod(argv[4]);
     }
-    if(file_u.find(string(armo_dir)+"/datasets/Truck.adc.laz")!=std::string::npos){
+    if(file_u.find("Truck.adc.laz")!=std::string::npos){
         DebugOn("Truck data set selected"<<endl);
     }
-    else if(file_u.find(string(armo_dir)+"/datasets/Car.adc.laz")!=std::string::npos){
+    else if(file_u.find("Car.adc.laz")!=std::string::npos){
         hr=0;hp=0;hy=0;
         xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
         mskip=1,dskip=4;
         DebugOn("Car data set selected"<<endl);
     }
-    else if(file_u.find(string(armo_dir)+"/datasets/Tent.adc.laz")!=std::string::npos){
+    else if(file_u.find("Tent.adc.laz")!=std::string::npos){
         hr=0;hp=0;hy=0;
         xm=0; ym=0;zm=124;xd=0;yd=0;zd=124.2;
         mskip=2;dskip=3;
