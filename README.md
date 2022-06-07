@@ -50,7 +50,7 @@ To run nsBB set `-DGurobi=ON -DGJK=ON -DEigen3=ON` while calling `cmake`. To run
 
 To run gurobi set `-DGurobi=ON` while calling `cmake`. 
 
-For nsBB ONLY
+__For nsBB ONLY__
 
 Please install [openGJK](https://github.com/MattiaMontanari/openGJK) 
 
@@ -60,17 +60,17 @@ Please download and extract (`tar -xf archivename`) [Eigen3](https://gitlab.com/
 
 `export EIGEN3_ROOT_DIR ="/Users/yourname/Dev/eigen-3.3.9"`
 
-For nsBB and Gurobi
+__For nsBB and Gurobi__
 
 Please install [Gurobi 9.5](https://www.gurobi.com/) (not required for aGS) For troubleshooting see [here](https://support.gurobi.com/hc/en-us/articles/360039093112-How-do-I-resolve-undefined-reference-errors-while-linking-Gurobi-in-C-)
 
 `export GRB_LICENSE_FILE="/Users/yourname/Dev/gurobi.lic"`
 
-For Mac,
+__For Mac,__
 
 `export GUROBI_HOME="/Library/gurobi950/macos_universal2"`
 
-For Linux,
+__For Linux,__
 
 `export GUROBI_HOME="$HOME/Dev/gurobi950/linux64"`
 
