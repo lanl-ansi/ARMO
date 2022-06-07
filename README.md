@@ -8,7 +8,7 @@
   </a>
 </p>
 <H1 align="center"> ARMO </H1>
-<H3 align="center"> Alignement and Registration via Mathematical Optimization </H3>
+<H3 align="center"> Alignment and Registration via Mathematical Optimization </H3>
 
 In airborne light detection and ranging (LiDAR) systems, misalignments between the LiDAR-scanner and the inertial navigation system (INS) mounted on an unmanned aerial vehicle (UAV)'s frame can lead to inaccurate 3D point clouds. Determining the orientation-offset, or boresight error, is key to many LiDAR-based applications. In this work, we introduce a mixed-integer quadratically constrained quadratic program (MIQCQP) that can globally solve this misalignment problem. We also propose a nested spatial branch and bound (nsBB) algorithm that improves computational performance. The nsBB relies on novel preprocessing steps that progressively reduce the problem size. In addition, an adaptive grid search (aGS) allowing us to obtain quick heuristic solutions is presented. Our algorithms are open-source, multi-threaded and multi-machine compatible.
 
