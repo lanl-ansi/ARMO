@@ -74,7 +74,7 @@ int main (int argc, char * argv[])
     double scanner_x=0.0, scanner_y=0.160999998450279, scanner_z=0.016;
     /*"hidden" calibration applied by LiDAR viewer given in .json file*/
     /*Truck set*/
-    double hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
+    double hr=0, hp=0, hy=0;
     /*to select overlapping regions of the object*/
     /*Truck set*/
     double xm=0, ym=0,zm=0,xd=0,yd=0,zd=0;
