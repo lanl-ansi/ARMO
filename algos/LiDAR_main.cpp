@@ -151,9 +151,15 @@ int main (int argc, char * argv[])
             auto x_prev=uav_cloud_u.at(i-1)[0];
             auto y_prev=uav_cloud_u.at(i-1)[1];
             auto z_prev=uav_cloud_u.at(i-1)[2];
-            if(abs(x-x_prev)>=1 || abs(y-y_prev)>=1 || abs(z-z_prev)>=1){
-                DebugOn("Two flight lines are detected"<<endl);
+            if((abs(x-x_prev)>=1 && abs(y-y_prev)>=1)){
+                if(mid_i!=0){
+                    DebugOn("More than Two flight lines are detected "<<mid_i<<" "<<endl);
+                    DebugOn("Invalid flight line selection!!!!!!!!!!!!!!!!!!!!!!!!");
+                    exit(0);
+                }
                 mid_i=i;
+                DebugOn("Two flight lines are detected "<<mid_i<<endl);
+                
             }
         }
         /*If two flight lines identified2*/
