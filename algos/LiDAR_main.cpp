@@ -207,7 +207,7 @@ int main (int argc, char * argv[])
 #ifdef USE_MATPLOT
         plot(full_point_cloud_data,e);
 #endif
-        for(auto i=0;i<full_point_cloud_model.size();i+=1){
+        for(auto i=0;i<full_point_cloud_model.size();i+=20){
             auto x=full_point_cloud_model.at(i)[0];
             auto y=full_point_cloud_model.at(i)[1];
             auto z=full_point_cloud_model.at(i)[2];
@@ -217,7 +217,7 @@ int main (int argc, char * argv[])
                 rpy_model1.push_back(full_rpy_model.at(i));
             }
         }
-        for(auto i=0;i<full_point_cloud_data.size();i++){
+        for(auto i=0;i<full_point_cloud_data.size();i+=20){
             auto x=full_point_cloud_data.at(i)[0];
             auto y=full_point_cloud_data.at(i)[1];
             auto z=full_point_cloud_data.at(i)[2];
