@@ -1175,7 +1175,7 @@ vector<double> BranchBound_MPI(vector<vector<double>>& point_cloud_model, vector
         send_vector_new(limits, lb_vector, lb_vec_worker);
         for(auto i=0;i<lb_vector.size();i++){
             if(lb_vector[i]<=best_ub){
-                if(i>=limits[worker_id] && i<limits[worker_id+1]){
+                if(worker_id+1<limits.size() && i>=limits[worker_id] && i<limits[worker_id+1]){
                     lb_queue.push(vec_node_worker[i-limits[worker_id]]);
                 }
                 else{
