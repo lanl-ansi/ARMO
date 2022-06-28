@@ -27,6 +27,7 @@
 #include <future>
 #include <thread>
 #include "Lidar_utils.h"
+#include <math.h>
 #include <gravity/solver.h>
 #include "ARMOConfig.h"
 #include "BB.h"
@@ -81,7 +82,7 @@ int main (int argc, char * argv[])
     hr=0,hp=0,hy=0;
     /*to downsample points*/
     /*Truck set*/
-    int mskip =1, dskip =2;
+    int mskip =1, dskip =1;
     double max_time = 100;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
@@ -172,31 +173,69 @@ int main (int argc, char * argv[])
         if(mid_i==0){
             invalid_argument("Two flight lines are not detected!");
         }
+        /*For downsampling*/
         int cloud_bar_max=1e4;
         int cloud_hat_max=2e3;
+        int size_1=mid_i;
+        int size_2=lidar_point_cloud.size()-mid_i+1;
         int skip_1a=1, skip_1b=1, skip_2a=1, skip_2b=1;
-        bool check_rema=false, check_remb=false;
-//        if(mid_i>= lidar_point_cloud.size()-mid_i+1){
-//            if(mid_i>cloud_bar_max){
-//                auto diff=mid_i-cloud_bar_max;
-//                if(diff<cloud_bar_max)
-//                skip_1=(cloud_bar_max-mid_i)/cloud_bar_max;
-//            }
-//            skip_2=(cloud_hat_max)/(lidar_point_cloud.size()-mid_i+1);
-//            skip_2=std::max(1, skip_2);
-//        }
-//        else{
-//            skip_2=(cloud_bar_max)/(mid_i);
-//            skip_2=std::max(1, skip_2);
-//            skip_1=(cloud_hat_max)/(lidar_point_cloud.size()-mid_i+1);
-//            skip_1=std::max(1, skip_1);
-//        }
-        for(auto i=0;i<mid_i;i++){
+        bool check_rem1=false, check_rem2=false;
+        if(size_1>=size_2){
+            if(size_1>cloud_bar_max){
+                double diff=size_1-cloud_bar_max;
+                if(diff<cloud_bar_max){
+                    skip_1b=round(size_1/diff);
+                    check_rem1=true;
+                }
+                else{
+                    skip_1a=round(size_1/cloud_bar_max);
+                }
+            }
+            if(size_2>cloud_hat_max){
+                double diff=size_2-cloud_hat_max;
+                if(diff<cloud_hat_max){
+                    skip_2b=round(size_2/diff);
+                    check_rem2=true;
+                }
+                else{
+                    skip_2a=round(size_2/cloud_hat_max);
+                }
+            }
+        }
+        else{
+            if(size_2>cloud_bar_max){
+                double diff=size_2-cloud_bar_max;
+                if(diff<cloud_bar_max){
+                    skip_2b=round(size_2/diff);
+                    check_rem2=true;
+                }
+                else{
+                    skip_2a=round(size_2/cloud_bar_max);
+                }
+            }
+            if(size_1>cloud_hat_max){
+                double diff=size_1-cloud_hat_max;
+                if(diff<cloud_hat_max){
+                    skip_1b=round(size_1/diff);
+                    check_rem1=true;
+                }
+                else{
+                    skip_1a=round(size_1/cloud_hat_max);
+                }
+            }
+        }
+        for(auto i=0;i<mid_i;i+=skip_1a){
+            if(check_rem1 && i%skip_1b==0){
+                continue;
+            }
             cloud1.push_back(lidar_point_cloud.at(i));
             uav1.push_back(uav_cloud_u.at(i));
             rpy1.push_back(roll_pitch_yaw.at(i));
         }
-        for(auto i=mid_i;i<lidar_point_cloud.size();i++){
+        for(auto i=mid_i;i<lidar_point_cloud.size();i+=skip_2a){
+            if(check_rem2 && i%skip_2b==0){
+                continue;
+            }
             cloud2.push_back(lidar_point_cloud.at(i));
             uav2.push_back(uav_cloud_u.at(i));
             rpy2.push_back(roll_pitch_yaw.at(i));
@@ -299,7 +338,7 @@ int main (int argc, char * argv[])
         }
         DebugOn("Size of set bar P "<<point_cloud_model.size()<<endl);
         DebugOn("Size of set hat P "<<point_cloud_data.size()<<endl);
-       
+        
         double roll_min=-2*pi/180;
         double roll_max=2*pi/180;
         double pitch_min=-2*pi/180;
@@ -325,7 +364,7 @@ int main (int argc, char * argv[])
 #ifdef USE_MPI
         }
 #endif
-
+        
         if(error_type=="L2"){
             best_ub=L2init;
         }
@@ -424,7 +463,7 @@ int main (int argc, char * argv[])
         
         apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
         if(format_laz){
-        save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
+            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
         }
         else{
             save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".las", lidar_point_cloud, em);
