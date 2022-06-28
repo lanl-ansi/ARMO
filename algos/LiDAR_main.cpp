@@ -85,6 +85,7 @@ int main (int argc, char * argv[])
     double max_time = 100;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
+    bool data_opt=true;/*If true, Working with data set \hat{P} union \bar{P}, else data set \hat{D} union \bar{D}  */
     /*Algorithm Choices
      "aGS"(default) to run the heuristic upper bound
      "nsBB" to run the spatial branch and bound algorithm
@@ -105,6 +106,7 @@ int main (int argc, char * argv[])
         bore_roll= std::stod(argv[2]);
         bore_pitch= std::stod(argv[3]);
         bore_yaw= std::stod(argv[4]);
+        data_opt=false;
     }
     if(file_u.find("Truck.adc.laz")!=std::string::npos){
         DebugOn("Truck data set selected"<<endl);
@@ -129,7 +131,7 @@ int main (int argc, char * argv[])
     }
     string error_type="L2";
     vector<double> best_rot(9,0.0);
-    bool data_opt=true;/*If true, Working with data set \hat{P} union \bar{P}, else data set \hat{D} union \bar{D}  */
+    
     double best_ub=1e5,L2init, L1init;
     
     vector<vector<double>> full_point_cloud_model, full_point_cloud_data, full_uav_model, full_uav_data;
@@ -166,6 +168,23 @@ int main (int argc, char * argv[])
         if(mid_i==0){
             invalid_argument("Two flight lines are not detected!");
         }
+        int cloud_bar_max=1e4;
+        int cloud_hat_max=2e3;
+//        int skip_1=1, skip_2=1;
+//        if(mid_i>= lidar_point_cloud.size()-mid_i+1){
+//            if(cloud_bar_max>mid_i){
+//                skip_1=(cloud_bar_max-mid_i)/cloud_bar_max;
+//                
+//            }
+//            skip_2=(cloud_hat_max)/(lidar_point_cloud.size()-mid_i+1);
+//            skip_2=std::max(1, skip_2);
+//        }
+//        else{
+//            skip_2=(cloud_bar_max)/(mid_i);
+//            skip_2=std::max(1, skip_2);
+//            skip_1=(cloud_hat_max)/(lidar_point_cloud.size()-mid_i+1);
+//            skip_1=std::max(1, skip_1);
+//        }
         for(auto i=0;i<mid_i;i++){
             cloud1.push_back(lidar_point_cloud.at(i));
             uav1.push_back(uav_cloud_u.at(i));
