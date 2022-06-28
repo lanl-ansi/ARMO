@@ -135,6 +135,9 @@ int main (int argc, char * argv[])
         DebugOn("Check if values of mskip and dskip are updated"<<endl);
     }
     string error_type="L2";
+    if(algo=="aGSL1"){
+        error_type="L1";
+    }
     vector<double> best_rot(9,0.0);
     
     double best_ub=1e5,L2init, L1init;
@@ -371,7 +374,7 @@ int main (int argc, char * argv[])
         else{
             best_ub=L1init;
         }
-        if(algo=="aGS"){
+        if(algo=="aGS" || algo=="aGSL1"){
             auto rot= ub_heuristic_disc(point_cloud_model, point_cloud_data, uav_model, uav_data, rpy_model, rpy_data, best_rot, best_ub, error_type, scanner_x, scanner_y, scanner_z, hr, hp, hy, max_time);
             auto roll_rad_ub = rot[0];
             auto pitch_rad_ub = rot[1];
