@@ -86,6 +86,7 @@ int main (int argc, char * argv[])
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
     bool data_opt=true;/*If true, Working with data set \hat{P} union \bar{P}, else data set \hat{D} union \bar{D}  */
+    bool format_laz=true;
     /*Algorithm Choices
      "aGS"(default) to run the heuristic upper bound
      "nsBB" to run the spatial branch and bound algorithm
@@ -107,6 +108,9 @@ int main (int argc, char * argv[])
         bore_pitch= std::stod(argv[3]);
         bore_yaw= std::stod(argv[4]);
         data_opt=false;
+    }
+    if(argc>=6){
+        format_laz=false;
     }
     if(file_u.find("Truck.adc.laz")!=std::string::npos){
         DebugOn("Truck data set selected"<<endl);
@@ -170,11 +174,13 @@ int main (int argc, char * argv[])
         }
         int cloud_bar_max=1e4;
         int cloud_hat_max=2e3;
-//        int skip_1=1, skip_2=1;
+        int skip_1a=1, skip_1b=1, skip_2a=1, skip_2b=1;
+        bool check_rema=false, check_remb=false;
 //        if(mid_i>= lidar_point_cloud.size()-mid_i+1){
-//            if(cloud_bar_max>mid_i){
+//            if(mid_i>cloud_bar_max){
+//                auto diff=mid_i-cloud_bar_max;
+//                if(diff<cloud_bar_max)
 //                skip_1=(cloud_bar_max-mid_i)/cloud_bar_max;
-//                
 //            }
 //            skip_2=(cloud_hat_max)/(lidar_point_cloud.size()-mid_i+1);
 //            skip_2=std::max(1, skip_2);
@@ -417,7 +423,12 @@ int main (int argc, char * argv[])
     else{/*Apply the calibration values on large data set D=\hat{D} union \bar{D}*/
         
         apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
+        if(format_laz){
         save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
+        }
+        else{
+            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".las", lidar_point_cloud, em);
+        }
     }
 #ifdef USE_MATPLOT
     plot(point_cloud_model, point_cloud_data);
