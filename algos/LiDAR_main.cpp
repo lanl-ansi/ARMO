@@ -73,15 +73,11 @@ int main (int argc, char * argv[])
     string file_u= string(armo_dir)+"/datasets/Truck.adc.laz";
     /*Scanner offset*/
     double scanner_x=0.0, scanner_y=0.160999998450279, scanner_z=0.016;
-    /*"hidden" calibration applied by LiDAR viewer given in .json file*/
-    /*Truck set*/
     double hr=0, hp=0, hy=0;
+    /*"hidden" calibration applied by LiDAR viewer given in .json file*/
     /*to select overlapping regions of the object*/
-    /*Truck set*/
     double xm=0, ym=0,zm=0,xd=0,yd=0,zd=0;
-    hr=0,hp=0,hy=0;
     /*to downsample points*/
-    /*Truck set*/
     int mskip =1, dskip =1;
     double max_time = 100;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
@@ -113,17 +109,21 @@ int main (int argc, char * argv[])
     if(argc>=6){
         format_laz=false;
     }
+    bool downsample=true;/*If data has been previously processed to include two overlapping regions only set bool downsample to false*/
+    /*To downsampling input to include overlapping regions only*/
+    if(downsample){
     if(file_u.find("Truck.adc.laz")!=std::string::npos){
+        hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
+        xm=0, ym=0,zm=1262.5,xd=0,yd=0,zd=1261.1;
+        mskip =1, dskip =2;
         DebugOn("Truck data set selected"<<endl);
     }
     else if(file_u.find("Car.adc.laz")!=std::string::npos){
-        hr=0;hp=0;hy=0;
         xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
         mskip=1,dskip=4;
         DebugOn("Car data set selected"<<endl);
     }
     else if(file_u.find("Tent.adc.laz")!=std::string::npos){
-        hr=0;hp=0;hy=0;
         xm=0; ym=0;zm=124;xd=0;yd=0;zd=124.2;
         mskip=2;dskip=3;
         DebugOn("Tent data set selected"<<endl);
@@ -133,6 +133,7 @@ int main (int argc, char * argv[])
         DebugOn("Check if values of hidden calibration values are updated"<<endl);
         DebugOn("Check if values of xm,ym,zm,xd,yd,zd are updated"<<endl);
         DebugOn("Check if values of mskip and dskip are updated"<<endl);
+    }
     }
     string error_type="L2";
     if(algo=="aGSL1"){
@@ -172,73 +173,17 @@ int main (int argc, char * argv[])
                 
             }
         }
-        /*If two flight lines identified2*/
+        /*If two flight lines are not identified2*/
         if(mid_i==0){
             invalid_argument("Two flight lines are not detected!");
         }
         /*For downsampling*/
-        int cloud_bar_max=1e4;
-        int cloud_hat_max=2e3;
-        int size_1=mid_i;
-        int size_2=lidar_point_cloud.size()-mid_i+1;
-        int skip_1a=1, skip_1b=1, skip_2a=1, skip_2b=1;
-        bool check_rem1=false, check_rem2=false;
-        if(size_1>=size_2){
-            if(size_1>cloud_bar_max){
-                double diff=size_1-cloud_bar_max;
-                if(diff<cloud_bar_max){
-                    skip_1b=round(size_1/diff);
-                    check_rem1=true;
-                }
-                else{
-                    skip_1a=round(size_1/cloud_bar_max);
-                }
-            }
-            if(size_2>cloud_hat_max){
-                double diff=size_2-cloud_hat_max;
-                if(diff<cloud_hat_max){
-                    skip_2b=round(size_2/diff);
-                    check_rem2=true;
-                }
-                else{
-                    skip_2a=round(size_2/cloud_hat_max);
-                }
-            }
-        }
-        else{
-            if(size_2>cloud_bar_max){
-                double diff=size_2-cloud_bar_max;
-                if(diff<cloud_bar_max){
-                    skip_2b=round(size_2/diff);
-                    check_rem2=true;
-                }
-                else{
-                    skip_2a=round(size_2/cloud_bar_max);
-                }
-            }
-            if(size_1>cloud_hat_max){
-                double diff=size_1-cloud_hat_max;
-                if(diff<cloud_hat_max){
-                    skip_1b=round(size_1/diff);
-                    check_rem1=true;
-                }
-                else{
-                    skip_1a=round(size_1/cloud_hat_max);
-                }
-            }
-        }
-        for(auto i=0;i<mid_i;i+=skip_1a){
-            if(check_rem1 && i%skip_1b==0){
-                continue;
-            }
+        for(auto i=0;i<mid_i;i++){
             cloud1.push_back(lidar_point_cloud.at(i));
             uav1.push_back(uav_cloud_u.at(i));
             rpy1.push_back(roll_pitch_yaw.at(i));
         }
-        for(auto i=mid_i;i<lidar_point_cloud.size();i+=skip_2a){
-            if(check_rem2 && i%skip_2b==0){
-                continue;
-            }
+        for(auto i=mid_i;i<lidar_point_cloud.size();i++){
             cloud2.push_back(lidar_point_cloud.at(i));
             uav2.push_back(uav_cloud_u.at(i));
             rpy2.push_back(roll_pitch_yaw.at(i));
