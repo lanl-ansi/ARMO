@@ -70,15 +70,10 @@ int main (int argc, char * argv[])
     auto err_rank = MPI_Comm_rank(MPI_COMM_WORLD, &worker_id);
     auto err_size = MPI_Comm_size(MPI_COMM_WORLD, &nb_workers);
 #endif
-    string file_u= string(armo_dir)+"/datasets/Truck.adc.laz";
+    string file= string(armo_dir)+"/datasets/Truck.adc.laz";
     /*Scanner offset*/
     double scanner_x=0.0, scanner_y=0.160999998450279, scanner_z=0.016;
-    double hr=0, hp=0, hy=0;
-    /*"hidden" calibration applied by LiDAR viewer given in .json file*/
-    /*to select overlapping regions of the object*/
-    double xm=0, ym=0,zm=0,xd=0,yd=0,zd=0;
-    /*to downsample points*/
-    int mskip =1, dskip =1;
+    double hr=0,hp=0,hy=0;
     double max_time = 100;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
@@ -91,7 +86,7 @@ int main (int argc, char * argv[])
      else if 3 angles given, the data-set is calibrated with these
      */
     if(argc>=2){
-        file_u = argv[1];
+        file = argv[1];
     }
     if(argc>=3){
         algo = argv[2];
@@ -109,33 +104,8 @@ int main (int argc, char * argv[])
     if(argc>=6){
         format_laz=false;
     }
-    bool downsample=true;/*If data has been previously processed to include two overlapping regions only set bool downsample to false*/
-    /*To downsampling input to include overlapping regions only*/
-    if(downsample){
-    if(file_u.find("Truck.adc.laz")!=std::string::npos){
-        //to correct for small calibration angls applied by LiDARViewer to data
-        hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
-        xm=0, ym=0,zm=1262.5,xd=0,yd=0,zd=1261.1;
-        mskip =1, dskip =2;
-        DebugOn("Truck data set selected"<<endl);
-    }
-    else if(file_u.find("Car.adc.laz")!=std::string::npos){
-        xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
-        mskip=1,dskip=4;
-        DebugOn("Car data set selected"<<endl);
-    }
-    else if(file_u.find("Tent.adc.laz")!=std::string::npos){
-        xm=0; ym=0;zm=124;xd=0;yd=0;zd=124.2;
-        mskip=2;dskip=3;
-        DebugOn("Tent data set selected"<<endl);
-    }
-    else{
-        DebugOn("WARNING: New data set!!!"<<endl<<"Before continuing "<<endl);
-        DebugOn("Check if values of hidden calibration values are updated"<<endl);
-        DebugOn("Check if values of xm,ym,zm,xd,yd,zd are updated"<<endl);
-        DebugOn("Check if values of mskip and dskip are updated"<<endl);
-    }
-    }
+    
+ 
     string error_type="L2";
     if(algo=="aGSL1"){
         error_type="L1";
@@ -143,148 +113,18 @@ int main (int argc, char * argv[])
     vector<double> best_rot(9,0.0);
     
     double best_ub=1e5,L2init, L1init;
-    
-    vector<vector<double>> full_point_cloud_model, full_point_cloud_data, full_uav_model, full_uav_data;
-    vector<vector<double>> point_cloud_model, point_cloud_data,point_cloud_model1, point_cloud_data1;
-    vector<vector<double>> uav_model, uav_data,uav_model1, uav_data1,cloud1, cloud2, uav1, uav2, rpy1, rpy2;
-    vector<vector<double>> full_rpy_model, full_rpy_data, rpy_model, rpy_data,rpy_model1, rpy_data1;
     vector<vector<double>> lidar_point_cloud, roll_pitch_yaw, em;
+    vector<vector<double>> full_point_cloud_model, full_point_cloud_data, full_uav_model, full_uav_data,full_rpy_model, full_rpy_data;
+    vector<vector<double>> point_cloud_model, point_cloud_data,rpy_model, rpy_data,uav_model, uav_data;;
+   
+    
     /*Reads input laz*/
-    auto uav_cloud_u=::read_laz(file_u, lidar_point_cloud, roll_pitch_yaw);
+    auto uav_cloud=::read_laz(file, lidar_point_cloud, roll_pitch_yaw);
     
     if(data_opt){/*Working with data sets P*/
-        int mid_i=0;
-        /*Separating data in parallel flight lines 1 and 2*/
-        for(auto i=1;i<uav_cloud_u.size();i++)
-        {
-            auto x=uav_cloud_u.at(i)[0];
-            auto y=uav_cloud_u.at(i)[1];
-            auto z=uav_cloud_u.at(i)[2];
-            auto x_prev=uav_cloud_u.at(i-1)[0];
-            auto y_prev=uav_cloud_u.at(i-1)[1];
-            auto z_prev=uav_cloud_u.at(i-1)[2];
-            if((abs(x-x_prev)>=1 && abs(y-y_prev)>=1)){
-                if(mid_i!=0){
-                    DebugOn("More than Two flight lines are detected "<<mid_i<<" "<<endl);
-                    DebugOn("Invalid flight line selection!!!!!!!!!!!!!!!!!!!!!!!!");
-                    exit(0);
-                }
-                mid_i=i;
-                DebugOn("Two flight lines are detected "<<mid_i<<endl);
-                
-            }
-        }
-        /*If two flight lines are not identified2*/
-        if(mid_i==0){
-            invalid_argument("Two flight lines are not detected!");
-        }
-        /*For downsampling*/
-        for(auto i=0;i<mid_i;i++){
-            cloud1.push_back(lidar_point_cloud.at(i));
-            uav1.push_back(uav_cloud_u.at(i));
-            rpy1.push_back(roll_pitch_yaw.at(i));
-        }
-        for(auto i=mid_i;i<lidar_point_cloud.size();i++){
-            cloud2.push_back(lidar_point_cloud.at(i));
-            uav2.push_back(uav_cloud_u.at(i));
-            rpy2.push_back(roll_pitch_yaw.at(i));
-        }
-        DebugOff("cloud1.size() "<<cloud1.size()<<endl);
-        DebugOff("cloud2.size() "<<cloud2.size()<<endl);
-        if(cloud1.size()>=cloud2.size()){
-            full_point_cloud_model=cloud1;
-            full_point_cloud_data=cloud2;
-            full_uav_model=uav1;
-            full_uav_data=uav2;
-            full_rpy_model=rpy1;
-            full_rpy_data=rpy2;
-        }
-        else{
-            full_point_cloud_model=cloud2;
-            full_point_cloud_data=cloud1;
-            full_uav_model=uav2;
-            full_uav_data=uav1;
-            full_rpy_model=rpy2;
-            full_rpy_data=rpy1;
-        }
-#ifdef USE_MATPLOT
-        plot(full_point_cloud_model, full_point_cloud_data);
-#endif
-        vector<vector<double>> e;
-        e.push_back(full_point_cloud_model[0]);
-#ifdef USE_MATPLOT
-        plot(full_point_cloud_model,e);
-#endif
-        e.clear();
-        e.push_back(full_point_cloud_data[0]);
-#ifdef USE_MATPLOT
-        plot(full_point_cloud_data,e);
-#endif
-        for(auto i=0;i<full_point_cloud_model.size();i++){
-            auto x=full_point_cloud_model.at(i)[0];
-            auto y=full_point_cloud_model.at(i)[1];
-            auto z=full_point_cloud_model.at(i)[2];
-            if(x>=xm && y>=ym && z>=zm){
-                point_cloud_model1.push_back(full_point_cloud_model.at(i));
-                uav_model1.push_back(full_uav_model.at(i));
-                rpy_model1.push_back(full_rpy_model.at(i));
-            }
-        }
-        for(auto i=0;i<full_point_cloud_data.size();i++){
-            auto x=full_point_cloud_data.at(i)[0];
-            auto y=full_point_cloud_data.at(i)[1];
-            auto z=full_point_cloud_data.at(i)[2];
-            if(x>=xd && y>=yd && z>=zd){
-                point_cloud_data1.push_back(full_point_cloud_data.at(i));
-                uav_data1.push_back(full_uav_data.at(i));
-                rpy_data1.push_back(full_rpy_data.at(i));
-            }
-        }
-        DebugOff(point_cloud_model1.size()<<endl);
-        DebugOff(point_cloud_data1.size()<<endl);
-#ifdef USE_MATPLOT
-        plot(point_cloud_model1, point_cloud_data1);
-        plot(uav_model1,uav_data1);
-#endif
+        flight_lines_split(lidar_point_cloud,uav_cloud, roll_pitch_yaw, full_point_cloud_model,  full_uav_model,full_rpy_model,full_point_cloud_data, full_uav_data,full_rpy_data);
         
-        for(auto i=0;i<point_cloud_model1.size();i+=mskip){
-            point_cloud_model.push_back(point_cloud_model1.at(i));
-            uav_model.push_back(uav_model1.at(i));
-            rpy_model.push_back(rpy_model1.at(i));
-            
-        }
-        
-        for(auto i=0;i<point_cloud_data1.size();i+=dskip){
-            point_cloud_data.push_back(point_cloud_data1.at(i));
-            uav_data.push_back(uav_data1.at(i));
-            rpy_data.push_back(rpy_data1.at(i));
-            
-        }
-        save_laz(file_u.substr(0,file_u.find(".laz"))+"_model.laz", point_cloud_model, em);
-        save_laz(file_u.substr(0,file_u.find(".laz"))+"_data.laz", point_cloud_data, em);
-        bool scale=true;
-        if(scale){
-            for(auto i=0;i<point_cloud_model.size();i++){
-                point_cloud_model.at(i)[0]-=uav_cloud_u.at(0)[0];
-                point_cloud_model.at(i)[1]-=uav_cloud_u.at(0)[1];
-                point_cloud_model.at(i)[2]-=uav_cloud_u.at(0)[2];
-            }
-            for(auto i=0;i<point_cloud_data.size();i++){
-                point_cloud_data.at(i)[0]-=uav_cloud_u.at(0)[0];
-                point_cloud_data.at(i)[1]-=uav_cloud_u.at(0)[1];
-                point_cloud_data.at(i)[2]-=uav_cloud_u.at(0)[2];
-            }
-            for(auto i=0;i<uav_model.size();i++){
-                uav_model.at(i)[0]-=uav_cloud_u.at(0)[0];
-                uav_model.at(i)[1]-=uav_cloud_u.at(0)[1];
-                uav_model.at(i)[2]-=uav_cloud_u.at(0)[2];
-            }
-            for(auto i=0;i<uav_data.size();i++){
-                uav_data.at(i)[0]-=uav_cloud_u.at(0)[0];
-                uav_data.at(i)[1]-=uav_cloud_u.at(0)[1];
-                uav_data.at(i)[2]-=uav_cloud_u.at(0)[2];
-            }
-        }
+        subsample_overlap_scale(file, full_point_cloud_model, full_uav_model, full_rpy_model, full_point_cloud_data, full_uav_data, full_rpy_data, uav_cloud.at(0), point_cloud_model,  uav_model, rpy_model, point_cloud_data, uav_data, rpy_data,hr,hp,hy);
         DebugOn("Size of set bar P "<<point_cloud_model.size()<<endl);
         DebugOn("Size of set hat P "<<point_cloud_data.size()<<endl);
         
@@ -327,8 +167,8 @@ int main (int argc, char * argv[])
             auto yaw_rad_ub = rot[2];
             DebugOff("Angles radians "<<roll_rad_ub<<" "<<pitch_rad_ub<<" "<<yaw_rad_ub<<endl);
             DebugOn("Angles (degrees) "<<roll_rad_ub*180/pi<<" "<<pitch_rad_ub*180/pi<<" "<<yaw_rad_ub*180/pi<<endl);
-            apply_transform_new_order(roll_rad_ub, pitch_rad_ub, yaw_rad_ub, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x,scanner_y,scanner_z,hr,hp,hy);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+"_"+to_string(roll_rad_ub*180/pi)+"_"+to_string(pitch_rad_ub*180/pi)+"_"+to_string(yaw_rad_ub*180/pi)+".laz", lidar_point_cloud, em);
+            apply_transform_new_order(roll_rad_ub, pitch_rad_ub, yaw_rad_ub, lidar_point_cloud, uav_cloud, roll_pitch_yaw, scanner_x,scanner_y,scanner_z,hr,hp,hy);
+            save_laz(file.substr(0,file.find(".laz"))+"_"+to_string(roll_rad_ub*180/pi)+"_"+to_string(pitch_rad_ub*180/pi)+"_"+to_string(yaw_rad_ub*180/pi)+".laz", lidar_point_cloud, em);
             
         }
         else if(algo=="gurobi"){
@@ -364,10 +204,10 @@ int main (int argc, char * argv[])
             
             apply_transform_new_order(roll_deg_bb*pi/180, pitch_deg_bb*pi/180, yaw_deg_bb*pi/180, point_cloud_model, uav_model, rpy_model, scanner_x,scanner_y,scanner_z,hr,hp,hy);
             apply_transform_new_order(roll_deg_bb*pi/180, pitch_deg_bb*pi/180, yaw_deg_bb*pi/180, point_cloud_data, uav_data, rpy_data, scanner_x,scanner_y,scanner_z,hr,hp,hy);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_hatp.laz", point_cloud_data, em);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_barp.laz", point_cloud_model, em);
-            apply_transform_new_order(roll_deg_bb*pi/180, pitch_deg_bb*pi/180, yaw_deg_bb*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x,scanner_y,scanner_z,hr,hp,hy);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+"_"+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+".laz", lidar_point_cloud, em);
+            save_laz(file.substr(0,file.find(".laz"))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_hatp.laz", point_cloud_data, em);
+            save_laz(file.substr(0,file.find(".laz"))+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+"_barp.laz", point_cloud_model, em);
+            apply_transform_new_order(roll_deg_bb*pi/180, pitch_deg_bb*pi/180, yaw_deg_bb*pi/180, lidar_point_cloud, uav_cloud, roll_pitch_yaw, scanner_x,scanner_y,scanner_z,hr,hp,hy);
+            save_laz(file.substr(0,file.find(".laz"))+"_"+to_string(roll_deg_bb)+"_"+to_string(pitch_deg_bb)+"_"+to_string(yaw_deg_bb)+".laz", lidar_point_cloud, em);
             
             auto L2=computeL2error(point_cloud_model,point_cloud_data,matching,err_per_point);
             auto L1=computeL1error(point_cloud_model,point_cloud_data,matching,err_per_point);
@@ -389,10 +229,10 @@ int main (int argc, char * argv[])
         else{/*Apply the calibration values on sets \hat{P}, \bar{P} and \hat{P} union \bar{P} */
             apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, point_cloud_model, uav_model, rpy_model, scanner_x,scanner_y,scanner_z,hr,hp,hy);
             apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, point_cloud_data, uav_data, rpy_data, scanner_x,scanner_y,scanner_z,hr,hp,hy);
-            apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_hatp.laz", point_cloud_data, em);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_barp.laz", point_cloud_model, em);
-            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
+            apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
+            save_laz(file.substr(0,file.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_hatp.laz", point_cloud_data, em);
+            save_laz(file.substr(0,file.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+"_barp.laz", point_cloud_model, em);
+            save_laz(file.substr(0,file.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
             auto L2=computeL2error(point_cloud_model,point_cloud_data,matching,err_per_point);
             auto L1=computeL1error(point_cloud_model,point_cloud_data,matching,err_per_point);
 #ifdef USE_MPI
@@ -410,12 +250,12 @@ int main (int argc, char * argv[])
     }
     else{/*Apply the calibration values on large data set D=\hat{D} union \bar{D}*/
         
-        apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud_u, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
+        apply_transform_new_order(bore_roll*pi/180, bore_pitch*pi/180, bore_yaw*pi/180, lidar_point_cloud, uav_cloud, roll_pitch_yaw, scanner_x, scanner_y, scanner_z, hr, hp, hy);
         if(format_laz){
-            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
+            save_laz(file.substr(0,file.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".laz", lidar_point_cloud, em);
         }
         else{
-            save_laz(file_u.substr(0,file_u.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".las", lidar_point_cloud, em);
+            save_laz(file.substr(0,file.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".las", lidar_point_cloud, em);
         }
     }
 #ifdef USE_MATPLOT
