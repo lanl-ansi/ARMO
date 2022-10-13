@@ -113,6 +113,7 @@ int main (int argc, char * argv[])
     /*To downsampling input to include overlapping regions only*/
     if(downsample){
     if(file_u.find("Truck.adc.laz")!=std::string::npos){
+        //to correct for small calibration angls applied by LiDARViewer to data
         hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
         xm=0, ym=0,zm=1262.5,xd=0,yd=0,zd=1261.1;
         mskip =1, dskip =2;
