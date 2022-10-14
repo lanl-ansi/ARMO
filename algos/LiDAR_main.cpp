@@ -117,7 +117,7 @@ int main (int argc, char * argv[])
     vector<vector<double>> full_point_cloud_model, full_point_cloud_data, full_uav_model, full_uav_data,full_rpy_model, full_rpy_data;
     vector<vector<double>> point_cloud_model, point_cloud_data,rpy_model, rpy_data,uav_model, uav_data;;
    
-    
+     DebugOn("Algorithm "<<algo<<" chosen"<<endl);
     /*Reads input laz*/
     auto uav_cloud=::read_laz(file, lidar_point_cloud, roll_pitch_yaw);
     
@@ -161,6 +161,7 @@ int main (int argc, char * argv[])
             best_ub=L1init;
         }
         if(algo=="aGS" || algo=="aGSL1"){
+	    DebugOn("Running "<<algo<<" ..."<<endl);
             auto rot= ub_heuristic_disc(point_cloud_model, point_cloud_data, uav_model, uav_data, rpy_model, rpy_data, best_rot, best_ub, error_type, scanner_x, scanner_y, scanner_z, hr, hp, hy, max_time);
             auto roll_rad_ub = rot[0];
             auto pitch_rad_ub = rot[1];
@@ -172,6 +173,7 @@ int main (int argc, char * argv[])
             
         }
         else if(algo=="gurobi"){
+	    DebugOn("Running "<<algo<<" ..."<<endl);
             vector<vector<double>> input_data_cloud, input_model_cloud, input_data_offset, input_model_offset;
             generate_inputs(point_cloud_model, uav_model, rpy_model, scanner_x, scanner_y, scanner_z,hr,hp,hy, input_model_cloud, input_model_offset);
             generate_inputs(point_cloud_data, uav_data, rpy_data, scanner_x, scanner_y, scanner_z, hr,hp,hy,input_data_cloud, input_data_offset);
@@ -193,8 +195,10 @@ int main (int argc, char * argv[])
             vector<double> rot;
 #ifdef USE_GJK
 #ifdef USE_MPI
+	    DebugOn("Running "<<algo<<" ..."<<endl); 
             rot=BranchBound_MPI(point_cloud_model, point_cloud_data, uav_model, uav_data, rpy_model, rpy_data, rot_h, best_ub, error_type, scanner_x, scanner_y, scanner_z, hr, hp, hy);
 #else
+	    DebugOn("Running "<<algo<<" ..."<<endl); 
             rot= BranchBound_Align(point_cloud_model, point_cloud_data, uav_model, uav_data, rpy_model, rpy_data, rot_h, best_ub, error_type, scanner_x, scanner_y, scanner_z, hr, hp, hy);
 #endif
             
