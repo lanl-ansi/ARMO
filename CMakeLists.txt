@@ -63,6 +63,7 @@ endif()
 if (GJK)
     message(STATUS "Enable GJK")
     add_definitions(-DUSE_GJK)
+    include_directories(${GJK_INCLUDE_DIRS})
 endif()
 
 # Find IPOPT (REQUIRED)
