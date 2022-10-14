@@ -28,6 +28,9 @@ set(THIRDPARTY_INSTALL_PATH ${CMAKE_BINARY_DIR}/third_party)
 # Find IPOPT (optional)
 option(Ipopt "Link to IPOPT libraries" OFF)
 
+# Find GJK (optional)
+option(GJK "Link to GJK libraries" OFF)
+
 # Find GUROBI (optional)
 option(Gurobi "Link to GUROBI libraries" OFF)
 
@@ -57,6 +60,10 @@ if (Gurobi)
     set(LIBS ${LIBS} ${GUROBI_LIBRARIES})
 endif()
 
+if (GJK)
+    message(STATUS "Enable GJK")
+    add_definitions(-DUSE_GJK)
+endif()
 
 # Find IPOPT (REQUIRED)
 if (Ipopt)
