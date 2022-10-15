@@ -52,7 +52,7 @@ To run gurobi set `-DGurobi=ON` while calling `cmake`.
 
 __For nsBB ONLY__
 
-Please install [openGJK](https://github.com/MattiaMontanari/openGJK) 
+Please install [openGJK v1.1](https://github.com/MattiaMontanari/openGJK/tree/v1.1) 
 
 `export GJK_ROOT_DIR="/Users/yourname/Dev/openGJK"`
 
