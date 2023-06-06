@@ -2,11 +2,11 @@ set(GJK_ROOT_DIR "$ENV{GJK_ROOT_DIR}" CACHE PATH "GJK root directory.")
 message("Looking for GJK in ${GJK_ROOT_DIR}")
 
 list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-DGJK_ROOT_DIR:PATH=${GJK_ROOT_DIR}")
-include_directories(${GJK_INCLUDE_DIRS})
 
 find_path(GJK_INCLUDE_DIRS
 	NAMES openGJK.h
 	HINTS ${GJK_ROOT_DIR}/lib/include/openGJK
+	HINTS ${GJK_ROOT_DIR}/../lib/include/openGJK
 	HINTS ${GJK_ROOT_DIR}/include/openGJK
 	HINTS /usr/local/include/
 )
@@ -42,4 +42,6 @@ message("GJK_Library is ${GJK_LIBRARY}")
 
 set(GJK_LIBRARIES ${GJK_LIBRARY})
 set(LIBS ${LIBS} ${GJK_LIBRARIES})
-
+include_directories(${GJK_INCLUDE_DIRS})
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(GJK DEFAULT_MSG GJK_LIBRARIES GJK_INCLUDE_DIRS)

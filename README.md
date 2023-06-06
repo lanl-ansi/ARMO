@@ -52,18 +52,18 @@ To run gurobi set `-DGurobi=ON` while calling `cmake`.
 
 __For nsBB ONLY__
 
-Please install [openGJK](https://github.com/MattiaMontanari/openGJK) 
+Please install [openGJK v1.1](https://github.com/MattiaMontanari/openGJK/tree/v1.1) and add the following in your ~/.bash_profile:
 
 `export GJK_ROOT_DIR="/Users/yourname/Dev/openGJK"`
 
-Please download and extract (`tar -xf archivename`) [Eigen3](https://gitlab.com/libeigen/eigen/-/releases/3.3.9) Eigen3 is header-only and does not need installation 
+Please download and extract (`tar -xf archivename`) [Eigen3](https://gitlab.com/libeigen/eigen/-/releases/3.3.9) Eigen3 is header-only and does not need installation and add the following in your ~/.bash_profile:
 
 `export EIGEN3_ROOT_DIR ="/Users/yourname/Dev/eigen-3.3.9"`
 
 __For nsBB and Gurobi__
 
 Please install [Gurobi 9.5](https://www.gurobi.com/) (not required for aGS) For troubleshooting see [here](https://support.gurobi.com/hc/en-us/articles/360039093112-How-do-I-resolve-undefined-reference-errors-while-linking-Gurobi-in-C-)
-
+Add the following in your ~/.bash_profile:
 `export GRB_LICENSE_FILE="/Users/yourname/Dev/gurobi.lic"`
 
 __For Mac,__
