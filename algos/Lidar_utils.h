@@ -969,7 +969,9 @@ void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>&
     keywords["ms"] = to_string(point_thick);
     //    keywords["aspect"] = "equal";
     
-    plt::plot3(x_vec_model, y_vec_model, z_vec_model,x_vec_data, y_vec_data, z_vec_data, keywords);
+    plt::plot3(x_vec_model, y_vec_model, z_vec_model, keywords);
+    plt::plot3(x_vec_data, y_vec_data, z_vec_data, keywords);
+    
     
     plt::show();
 }
@@ -1002,7 +1004,7 @@ void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>&
     keywords["ms"] = to_string(point_thick);
     //    keywords["aspect"] = "equal";
     
-    plt::plot3(x_vec_model, y_vec_model, z_vec_model,x_vec_data, y_vec_data, z_vec_data,a_vec_data, b_vec_data, c_vec_data, keywords);
+    plt::plot3(x_vec_model, y_vec_model, z_vec_model, keywords);
     
     plt::show();
 }
@@ -1040,7 +1042,7 @@ void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>&
     keywords["ms"] = to_string(point_thick);
     //    keywords["aspect"] = "equal";
     
-    plt::plot3(x_vec_model, y_vec_model, z_vec_model,x_vec_data, y_vec_data, z_vec_data,a_vec_data, b_vec_data, c_vec_data,e_vec_data, f_vec_data, g_vec_data, keywords);
+    plt::plot3(x_vec_model, y_vec_model, z_vec_model,keywords);
     
     plt::show();
 }
@@ -1271,12 +1273,12 @@ vector<vector<double>> read_laz(const string& fname, vector<vector<double>>& lid
         vector<vector<double>> empty_vec;
         empty_vec.push_back(uav_cloud[0]);
 #ifdef USE_MATPLOT
-         plot(uav_cloud,empty_vec, 0.1);
+//         plot(uav_cloud,empty_vec, 0.1);
 #endif
         empty_vec.clear();
         empty_vec.push_back(lidar_point_cloud[0]);
 #ifdef USE_MATPLOT
-         plot(lidar_point_cloud,empty_vec, 0.1);
+//         plot(lidar_point_cloud,empty_vec, 0.1);
 #endif
         save_laz(name, point_cloud1, point_cloud2);
         DebugOff("time_start "<<time_start);
@@ -2260,6 +2262,7 @@ double get_interpolation_coef(const double& lidar_time, UAVPoint* p1, UAVPoint* 
 
 void flight_lines_split(const vector<vector<double>>& lidar_point_cloud,const vector<vector<double>>& uav_cloud, const vector<vector<double>>& roll_pitch_yaw,vector<vector<double>>& full_point_cloud_model, vector<vector<double>>& full_uav_model,vector<vector<double>>& full_rpy_model, vector<vector<double>>& full_point_cloud_data, vector<vector<double>>& full_uav_data,vector<vector<double>>& full_rpy_data){
     vector<vector<double>> cloud1, cloud2, uav1, uav2, rpy1, rpy2;
+//    int mid_i=std::round(uav_cloud.size()/2.);
     int mid_i=0;
     /*Separating data in parallel flight lines 1 and 2*/
     for(auto i=1;i<uav_cloud.size();i++)
@@ -2273,12 +2276,13 @@ void flight_lines_split(const vector<vector<double>>& lidar_point_cloud,const ve
         if((abs(x-x_prev)>=1 && abs(y-y_prev)>=1)){
             if(mid_i!=0){
                 DebugOn("More than Two flight lines are detected "<<mid_i<<" "<<endl);
-                DebugOn("Invalid flight line selection!!!!!!!!!!!!!!!!!!!!!!!!");
-                exit(0);
+//                DebugOn("Invalid flight line selection!!!!!!!!!!!!!!!!!!!!!!!!");
+//                exit(0);
             }
-            mid_i=i;
+            else
+                mid_i=i;
             DebugOn("Two flight lines are detected "<<mid_i<<endl);
-            
+
         }
     }
     /*If two flight lines are not identified2*/
@@ -2314,76 +2318,81 @@ void flight_lines_split(const vector<vector<double>>& lidar_point_cloud,const ve
         full_rpy_data=rpy1;
     }
 }
-void subsample_overlap_scale(std::string file, const vector<vector<double>>& full_point_cloud_model, const vector<vector<double>>& full_uav_model, const vector<vector<double>>& full_rpy_model, const vector<vector<double>>& full_point_cloud_data, const vector<vector<double>>& full_uav_data,const vector<vector<double>>& full_rpy_data, const vector<double> uav_first_entry, vector<vector<double>>& point_cloud_model, vector<vector<double>>& uav_model,vector<vector<double>>& rpy_model, vector<vector<double>>& point_cloud_data, vector<vector<double>>& uav_data,vector<vector<double>>& rpy_data, double& hr, double& hp, double& hy){
+void subsample_overlap_scale(std::string file, const vector<vector<double>>& full_point_cloud_model, const vector<vector<double>>& full_uav_model, const vector<vector<double>>& full_rpy_model, const vector<vector<double>>& full_point_cloud_data, const vector<vector<double>>& full_uav_data,const vector<vector<double>>& full_rpy_data, const vector<double> uav_first_entry, vector<vector<double>>& point_cloud_model, vector<vector<double>>& uav_model,vector<vector<double>>& rpy_model, vector<vector<double>>& point_cloud_data, vector<vector<double>>& uav_data,vector<vector<double>>& rpy_data, double& hr, double& hp, double& hy, int max_nb_points = 5000){
     bool subsample=true;/*If data has been previously processed to include two overlapping regions only set bool subsample to false*/
    
     /*to select overlapping regions of the object*/
     double xm=0, ym=0,zm=0,xd=0,yd=0,zd=0;
     /*to downsample points*/
-    int mskip =1, dskip =1;
+    int mskip =100, dskip =100;
     vector<vector<double>> point_cloud_model1, point_cloud_data1,uav_model1, uav_data1,rpy_model1, rpy_data1, em;
     /*To subsample input to include overlapping regions only*/
     if(subsample){
-    if(file.find("Truck.adc.laz")!=std::string::npos){
-        /*"hidden" calibration applied by LiDAR viewer given in .json file*/
-        //to correct for small calibration angls applied by LiDARViewer to data
-        hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
-        xm=0, ym=0,zm=1262.5,xd=0,yd=0,zd=1261.1;
-        mskip =1, dskip =2;
-        DebugOn("Truck data set selected"<<endl);
-    }
-    else if(file.find("Car.adc.laz")!=std::string::npos){
-        xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
-        mskip=1,dskip=4;
-        DebugOn("Car data set selected"<<endl);
-    }
-    else if(file.find("Tent.adc.laz")!=std::string::npos){
-        xm=0; ym=0;zm=124;xd=0;yd=0;zd=124.2;
-        mskip=2;dskip=3;
-        DebugOn("Tent data set selected"<<endl);
-    }
-    else{
-        DebugOn("WARNING: New data set!!!"<<endl<<"Before continuing "<<endl);
-        DebugOn("Check if values of hidden calibration values are updated"<<endl);
-        DebugOn("Check if values of xm,ym,zm,xd,yd,zd are updated"<<endl);
-        DebugOn("Check if values of mskip and dskip are updated"<<endl);
-    }
-    for(auto i=0;i<full_point_cloud_model.size();i++){
-        auto x=full_point_cloud_model.at(i)[0];
-        auto y=full_point_cloud_model.at(i)[1];
-        auto z=full_point_cloud_model.at(i)[2];
-        if(x>=xm && y>=ym && z>=zm){
-            point_cloud_model1.push_back(full_point_cloud_model.at(i));
-            uav_model1.push_back(full_uav_model.at(i));
-            rpy_model1.push_back(full_rpy_model.at(i));
+        if(file.find("Truck.adc.laz")!=std::string::npos){
+            /*"hidden" calibration applied by LiDAR viewer given in .json file*/
+            //to correct for small calibration angls applied by LiDARViewer to data
+            hr=-0.0004815624270122, hp=0.000897555320989341, hy=0.00249693566001952;
+            xm=0, ym=0,zm=1262.5,xd=0,yd=0,zd=1261.1;
+            mskip =1, dskip =2;
+            DebugOn("Truck data set selected"<<endl);
         }
-    }
-    for(auto i=0;i<full_point_cloud_data.size();i++){
-        auto x=full_point_cloud_data.at(i)[0];
-        auto y=full_point_cloud_data.at(i)[1];
-        auto z=full_point_cloud_data.at(i)[2];
-        if(x>=xd && y>=yd && z>=zd){
-            point_cloud_data1.push_back(full_point_cloud_data.at(i));
-            uav_data1.push_back(full_uav_data.at(i));
-            rpy_data1.push_back(full_rpy_data.at(i));
+        else if(file.find("Car.adc.laz")!=std::string::npos){
+            xm=0, ym=0,zm=2122.0,xd=385276,yd=0,zd=2121.4;
+            mskip=1,dskip=4;
+            DebugOn("Car data set selected"<<endl);
         }
-    }
-    DebugOff(point_cloud_model1.size()<<endl);
-    DebugOff(point_cloud_data1.size()<<endl);
-    
-    for(auto i=0;i<point_cloud_model1.size();i+=mskip){
-        point_cloud_model.push_back(point_cloud_model1.at(i));
-        uav_model.push_back(uav_model1.at(i));
-        rpy_model.push_back(rpy_model1.at(i));
+        else if(file.find("Tent.adc.laz")!=std::string::npos){
+            xm=0; ym=0;zm=124;xd=0;yd=0;zd=124.2;
+            mskip=2;dskip=3;
+            DebugOn("Tent data set selected"<<endl);
+        }
+        else{
+            DebugOn("WARNING: New data set!!!"<<endl<<"Before continuing "<<endl);
+            DebugOn("Check if values of hidden calibration values are updated"<<endl);
+            DebugOn("Check if values of xm,ym,zm,xd,yd,zd are updated"<<endl);
+            DebugOn("Check if values of mskip and dskip are updated"<<endl);
+        }
+        for(auto i=0;i<full_point_cloud_model.size();i++){
+            auto x=full_point_cloud_model.at(i)[0];
+            auto y=full_point_cloud_model.at(i)[1];
+            auto z=full_point_cloud_model.at(i)[2];
+            if(x>=xm && y>=ym && z>=zm){
+                point_cloud_model1.push_back(full_point_cloud_model.at(i));
+                uav_model1.push_back(full_uav_model.at(i));
+                rpy_model1.push_back(full_rpy_model.at(i));
+            }
+        }
+        for(auto i=0;i<full_point_cloud_data.size();i++){
+            auto x=full_point_cloud_data.at(i)[0];
+            auto y=full_point_cloud_data.at(i)[1];
+            auto z=full_point_cloud_data.at(i)[2];
+            if(x>=xd && y>=yd && z>=zd){
+                point_cloud_data1.push_back(full_point_cloud_data.at(i));
+                uav_data1.push_back(full_uav_data.at(i));
+                rpy_data1.push_back(full_rpy_data.at(i));
+            }
+        }
+        DebugOn("Model point cloude size = " << point_cloud_model1.size()<<endl);
+        DebugOn("Data point cloude size = " << point_cloud_data1.size()<<endl);
+        DebugOn("Subsampling to get a few thousand points\n");
+        mskip = ceil(point_cloud_model1.size()/(double)max_nb_points);
+        dskip = ceil(point_cloud_data1.size()/(double)max_nb_points);
         
-    }
-    
-    for(auto i=0;i<point_cloud_data1.size();i+=dskip){
-        point_cloud_data.push_back(point_cloud_data1.at(i));
-        uav_data.push_back(uav_data1.at(i));
-        rpy_data.push_back(rpy_data1.at(i));
+        for(auto i=0;i<point_cloud_model1.size();i+=mskip){
+            point_cloud_model.push_back(point_cloud_model1.at(i));
+            uav_model.push_back(uav_model1.at(i));
+            rpy_model.push_back(rpy_model1.at(i));
+            
+        }
         
-    }
+        for(auto i=0;i<point_cloud_data1.size();i+=dskip){
+            point_cloud_data.push_back(point_cloud_data1.at(i));
+            uav_data.push_back(uav_data1.at(i));
+            rpy_data.push_back(rpy_data1.at(i));
+            
+        }
+        DebugOn("Subsampled model point cloude size = " << point_cloud_model.size()<<endl);
+        DebugOn("Subsampled data point cloude size = " << point_cloud_data.size()<<endl);
     }
     else{
         point_cloud_model=full_point_cloud_model;
@@ -2395,7 +2404,7 @@ void subsample_overlap_scale(std::string file, const vector<vector<double>>& ful
     }
     save_laz(file.substr(0,file.find(".laz"))+"_model.laz", point_cloud_model, em);
     save_laz(file.substr(0,file.find(".laz"))+"_data.laz", point_cloud_data, em);
-    bool scale=true;
+    bool scale=false;
     if(scale){
         for(auto i=0;i<point_cloud_model.size();i++){
             point_cloud_model.at(i)[0]-=uav_first_entry[0];

@@ -45,7 +45,7 @@ ${GRAVITY_ROOT_DIR}/libgfortran-5.dll ${PROJECT_SOURCE_DIR}/bin/Release/libgfort
 else()
 ExternalProject_Add(gravity
     DOWNLOAD_DIR ${THIRDPARTY_INSTALL_PATH}
-    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b Align --single-branch ${GRAVITY_DOWNLOAD_URL} && cd ./Gravity && mkdir build && cd build && cmake .. -DGJK=${GJK} -DEigen3=${Eigen3} -DOpenMPI=${OpenMPI} -DGurobi=${Gurobi} -DIpopt=${Ipopt} && make gravity
+    DOWNLOAD_COMMAND export HTTPS_PROXY=$ENV{HTTPS_PROXY} && git clone -b Align --single-branch ${GRAVITY_DOWNLOAD_URL} && cd ./Gravity && mkdir build && cd build && cmake .. -DMatplot=${Matplot} -DGJK=${GJK} -DEigen3=${Eigen3} -DOpenMPI=${OpenMPI} -DGurobi=${Gurobi} -DIpopt=${Ipopt} && make gravity
     URL ${MP_DOWNLOAD_URL}
     CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
     CONFIGURE_COMMAND ""

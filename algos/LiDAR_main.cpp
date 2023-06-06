@@ -11,6 +11,7 @@
 #include <optionParser.hpp>
 #endif
 #include <gravity/rapidcsv.h>
+//#undefine USE_MATPLOT
 #ifdef USE_MATPLOT
 #include <gravity/matplotlibcpp.h>
 #endif
@@ -50,9 +51,34 @@ using namespace gravity;
 
 
 /* Plot two point clouds */
-void plot(const vector<vector<double>>& point_cloud1, const vector<vector<double>>& point_cloud2, double point_thick = 0.1);
-void plot(const vector<vector<double>>& point_cloud1, const vector<vector<double>>& point_cloud2,const vector<vector<double>>& point_cloud3, double point_thick = 0.1);
-void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>& ext_data, const vector<vector<double>>& ext_data1,const vector<vector<double>>& ext_data2, double point_thick=0.1);
+#ifdef USE_MATPLOT
+//void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>& ext_data, double point_thick=0.1);
+/* Plot two point clouds */
+//void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>& ext_data, double point_thick=0.1){
+//    namespace plt = matplotlibcpp;
+//    vector<double> x_vec_model(ext_model.size()), y_vec_model(ext_model.size()), z_vec_model(ext_model.size());
+//    vector<double> x_vec_data(ext_data.size()), y_vec_data(ext_data.size()), z_vec_data(ext_data.size());
+//    for (int i = 0; i<ext_model.size(); i++) {
+//        x_vec_model[i] = ext_model[i][0];
+//        y_vec_model[i] = ext_model[i][1];
+//        z_vec_model[i] = ext_model[i][2];
+//    }
+//    for (int i = 0; i<ext_data.size(); i++) {
+//        x_vec_data[i] = ext_data[i][0];
+//        y_vec_data[i] = ext_data[i][1];
+//        z_vec_data[i] = ext_data[i][2];
+//    }
+//    std::map<std::string, std::string> keywords;
+//    keywords["marker"] = "s";
+//    keywords["linestyle"] = "None";
+//    keywords["ms"] = to_string(point_thick);
+//    plt::plot3(x_vec_model, y_vec_model, z_vec_model,x_vec_data, y_vec_data, z_vec_data, keywords);
+//    plt::show();
+//}
+#endif
+//void plot(const vector<vector<double>>& point_cloud1, const vector<vector<double>>& point_cloud2, double point_thick = 0.1);
+//void plot(const vector<vector<double>>& point_cloud1, const vector<vector<double>>& point_cloud2,const vector<vector<double>>& point_cloud3, double point_thick = 0.1);
+//void plot(const vector<vector<double>>& ext_model, const vector<vector<double>>& ext_data, const vector<vector<double>>& ext_data1,const vector<vector<double>>& ext_data2, double point_thick=0.1);
 
 int main (int argc, char * argv[])
 {
@@ -75,6 +101,7 @@ int main (int argc, char * argv[])
     double scanner_x=0.0, scanner_y=0.160999998450279, scanner_z=0.016;
     double hr=0,hp=0,hy=0;
     double max_time = 100;
+    int max_nb_points = 5000;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
     bool data_opt=true;/*If true, Working with data set \hat{P} union \bar{P}, else data set \hat{D} union \bar{D}  */
@@ -95,13 +122,16 @@ int main (int argc, char * argv[])
         max_time = std::stod(argv[3]);
     }
     if(argc>=5){
+        max_nb_points = std::stoi(argv[4]);
+    }
+    if(argc>=6){
         algo="apply_angles";
         bore_roll= std::stod(argv[2]);
         bore_pitch= std::stod(argv[3]);
         bore_yaw= std::stod(argv[4]);
         data_opt=false;
     }
-    if(argc>=6){
+    if(argc>=7){
         format_laz=false;
     }
     
@@ -122,9 +152,10 @@ int main (int argc, char * argv[])
     auto uav_cloud=::read_laz(file, lidar_point_cloud, roll_pitch_yaw);
     
     if(data_opt){/*Working with data sets P*/
+//        plot(uav_cloud, uav_cloud,0.1);
         flight_lines_split(lidar_point_cloud,uav_cloud, roll_pitch_yaw, full_point_cloud_model,  full_uav_model,full_rpy_model,full_point_cloud_data, full_uav_data,full_rpy_data);
         
-        subsample_overlap_scale(file, full_point_cloud_model, full_uav_model, full_rpy_model, full_point_cloud_data, full_uav_data, full_rpy_data, uav_cloud.at(0), point_cloud_model,  uav_model, rpy_model, point_cloud_data, uav_data, rpy_data,hr,hp,hy);
+        subsample_overlap_scale(file, full_point_cloud_model, full_uav_model, full_rpy_model, full_point_cloud_data, full_uav_data, full_rpy_data, uav_cloud.at(0), point_cloud_model,  uav_model, rpy_model, point_cloud_data, uav_data, rpy_data,hr,hp,hy,max_nb_points);
         DebugOn("Size of set bar P "<<point_cloud_model.size()<<endl);
         DebugOn("Size of set hat P "<<point_cloud_data.size()<<endl);
         
@@ -161,6 +192,10 @@ int main (int argc, char * argv[])
             best_ub=L1init;
         }
         if(algo=="aGS" || algo=="aGSL1"){
+#ifdef USE_MATPLOT
+            plot(uav_model, uav_data,0.1);
+            plot(point_cloud_model, point_cloud_data,0.1);
+#endif
             auto rot= ub_heuristic_disc(point_cloud_model, point_cloud_data, uav_model, uav_data, rpy_model, rpy_data, best_rot, best_ub, error_type, scanner_x, scanner_y, scanner_z, hr, hp, hy, max_time);
             auto roll_rad_ub = rot[0];
             auto pitch_rad_ub = rot[1];
@@ -258,9 +293,9 @@ int main (int argc, char * argv[])
             save_laz(file.substr(0,file.find(".laz"))+to_string(bore_roll)+"_"+to_string(bore_pitch)+"_"+to_string(bore_yaw)+".las", lidar_point_cloud, em);
         }
     }
-#ifdef USE_MATPLOT
-    plot(point_cloud_model, point_cloud_data);
-#endif
+//#ifdef USE_MATPLOT
+//    plot(point_cloud_model, point_cloud_data);
+//#endif
     
 }
 
