@@ -101,7 +101,7 @@ int main (int argc, char * argv[])
     double scanner_x=0.0, scanner_y=0.160999998450279, scanner_z=0.016;
     double hr=0,hp=0,hy=0;
     double max_time = 100;
-    int max_nb_points = 5000;
+    int max_nb_points = 10000;
     double bore_roll=0, bore_pitch=0, bore_yaw=0;/*Calibration angles in degrees*/
     string algo="aGS";
     bool data_opt=true;/*If true, Working with data set \hat{P} union \bar{P}, else data set \hat{D} union \bar{D}  */

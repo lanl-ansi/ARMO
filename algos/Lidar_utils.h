@@ -2318,7 +2318,7 @@ void flight_lines_split(const vector<vector<double>>& lidar_point_cloud,const ve
         full_rpy_data=rpy1;
     }
 }
-void subsample_overlap_scale(std::string file, const vector<vector<double>>& full_point_cloud_model, const vector<vector<double>>& full_uav_model, const vector<vector<double>>& full_rpy_model, const vector<vector<double>>& full_point_cloud_data, const vector<vector<double>>& full_uav_data,const vector<vector<double>>& full_rpy_data, const vector<double> uav_first_entry, vector<vector<double>>& point_cloud_model, vector<vector<double>>& uav_model,vector<vector<double>>& rpy_model, vector<vector<double>>& point_cloud_data, vector<vector<double>>& uav_data,vector<vector<double>>& rpy_data, double& hr, double& hp, double& hy, int max_nb_points = 5000){
+void subsample_overlap_scale(std::string file, const vector<vector<double>>& full_point_cloud_model, const vector<vector<double>>& full_uav_model, const vector<vector<double>>& full_rpy_model, const vector<vector<double>>& full_point_cloud_data, const vector<vector<double>>& full_uav_data,const vector<vector<double>>& full_rpy_data, const vector<double> uav_first_entry, vector<vector<double>>& point_cloud_model, vector<vector<double>>& uav_model,vector<vector<double>>& rpy_model, vector<vector<double>>& point_cloud_data, vector<vector<double>>& uav_data,vector<vector<double>>& rpy_data, double& hr, double& hp, double& hy, int max_nb_points = 10000){
     bool subsample=true;/*If data has been previously processed to include two overlapping regions only set bool subsample to false*/
    
     /*to select overlapping regions of the object*/
