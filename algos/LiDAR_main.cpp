@@ -118,7 +118,7 @@ int main (int argc, char * argv[])
     if(argc>=3){
         algo = argv[2];
     }
-    if(argc==4){
+    if(argc>=4){
         max_time = std::stod(argv[3]);
     }
     if(argc>=5){
